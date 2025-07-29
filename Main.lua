@@ -11,8 +11,17 @@ local function Main(Options)
     
     -- Carregar e executar o script principal
     local success, result = pcall(function()
-        local script = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/UI.lua'))()
-        return script(Options)
+        local script = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/UI.lua'))
+        if script then
+            local uiFunction = script()
+            if uiFunction then
+                return uiFunction(Options)
+            else
+                error("UI.lua não retornou uma função válida")
+            end
+        else
+            error("Falha ao carregar UI.lua")
+        end
     end)
     
     if not success then
