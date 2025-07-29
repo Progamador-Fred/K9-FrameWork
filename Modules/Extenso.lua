@@ -1,5 +1,5 @@
 -- Extenso.lua
--- Gambiarra para converter qualquer número para extenso
+-- Gambiarra melhorada para converter qualquer número para extenso
 -- Criado por K9zzzzz
 
 local Extenso = {}
@@ -32,29 +32,42 @@ function Extenso:Converter(numero)
             return dezenas[dezena] .. " E " .. numerosBasicos[unidade]
         end
     else
-        -- Para números maiores que 99, usar gambiarra
-        return self:Gambiarra(numero)
+        -- Para números maiores que 99, usar gambiarra melhorada
+        return self:GambiarraMelhorada(numero)
     end
 end
 
--- Gambiarra para números grandes
-function Extenso:Gambiarra(numero)
+-- Gambiarra melhorada para números grandes
+function Extenso:GambiarraMelhorada(numero)
     local numeroStr = tostring(numero)
     local resultado = ""
     
-    -- Converter cada dígito para extenso
-    for i = 1, #numeroStr do
-        local digito = tonumber(numeroStr:sub(i, i))
-        if digito > 0 then
-            resultado = resultado .. numerosBasicos[digito] .. " "
+    -- Se o número for muito grande, usar estratégia diferente
+    if #numeroStr > 10 then
+        -- Para números gigantes, usar apenas os primeiros dígitos
+        local primeirosDigitos = numeroStr:sub(1, 5)
+        resultado = "NÚMERO " .. primeirosDigitos
+    else
+        -- Para números normais, converter cada dígito
+        for i = 1, #numeroStr do
+            local digito = tonumber(numeroStr:sub(i, i))
+            if digito > 0 then
+                resultado = resultado .. numerosBasicos[digito] .. " "
+            end
         end
+        
+        resultado = resultado:gsub("%s+$", "") -- Remove espaços extras
     end
     
-    return resultado:gsub("%s+$", "") -- Remove espaços extras
+    return resultado
 end
 
 -- Função para obter número por extenso
 function Extenso:GetNumero(numero)
+    if not numero or numero <= 0 then
+        return "ZERO"
+    end
+    
     return self:Converter(numero)
 end
 

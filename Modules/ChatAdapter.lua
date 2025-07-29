@@ -1,5 +1,5 @@
 -- ChatAdapter.lua
--- Sistema de chat adaptativo que funciona
+-- Sistema de chat adaptativo melhorado e robusto
 -- Criado por K9zzzzz
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -8,16 +8,25 @@ local Players = game:GetService("Players")
 
 local ChatAdapter = {}
 
--- Detectar tipo de chat
+-- Detectar tipo de chat de forma mais robusta
 function ChatAdapter:DetectChatType()
-    -- Verificar se existe LegacyChatService
+    -- Verificar LegacyChatService
     local legacyExists = pcall(function()
-        return ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        local events = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if events then
+            local sayEvent = events:FindFirstChild("SayMessageRequest")
+            return sayEvent ~= nil
+        end
+        return false
     end)
     
-    -- Verificar se existe TextChatService
+    -- Verificar TextChatService
     local textChatExists = pcall(function()
-        return TextChatService:FindFirstChild("ChatWindow")
+        local chatWindow = TextChatService:FindFirstChild("ChatWindow")
+        if chatWindow then
+            return chatWindow:FindFirstChild("SendAsync") ~= nil
+        end
+        return false
     end)
     
     if legacyExists then
@@ -29,35 +38,44 @@ function ChatAdapter:DetectChatType()
     end
 end
 
--- Enviar mensagem com adaptação automática
+-- Enviar mensagem com adaptação automática melhorada
 function ChatAdapter:SendMessage(message)
-    local chatType = self:DetectChatType()
+    if not message or message == "" then
+        return false
+    end
+    
     local success = false
     
-    if chatType == "Legacy" then
-        -- Usar LegacyChatService
-        local success1 = pcall(function()
-            ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
-        end)
-        success = success1
-    elseif chatType == "TextChat" then
-        -- Usar TextChatService
-        local success2 = pcall(function()
-            TextChatService.ChatWindow:SendAsync(message)
-        end)
-        success = success2
+    -- Tentar LegacyChatService primeiro (mais comum)
+    local success1 = pcall(function()
+        local events = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if events then
+            local sayEvent = events:FindFirstChild("SayMessageRequest")
+            if sayEvent then
+                sayEvent:FireServer(message, "All")
+                return true
+            end
+        end
+        return false
+    end)
+    
+    if success1 then
+        success = true
     else
-        -- Tentar ambos os métodos
-        local success1 = pcall(function()
-            ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+        -- Tentar TextChatService como fallback
+        local success2 = pcall(function()
+            local chatWindow = TextChatService:FindFirstChild("ChatWindow")
+            if chatWindow then
+                local sendAsync = chatWindow:FindFirstChild("SendAsync")
+                if sendAsync then
+                    sendAsync:Invoke(message)
+                    return true
+                end
+            end
+            return false
         end)
         
-        if not success1 then
-            local success2 = pcall(function()
-                TextChatService.ChatWindow:SendAsync(message)
-            end)
-            success = success2
-        else
+        if success2 then
             success = true
         end
     end
@@ -65,12 +83,7 @@ function ChatAdapter:SendMessage(message)
     return success
 end
 
--- Testar conexão
-function ChatAdapter:TestConnection()
-    return self:SendMessage("Teste de conexão")
-end
-
--- Enviar mensagem com retry
+-- Enviar mensagem com retry melhorado
 function ChatAdapter:SendMessageWithRetry(message, maxRetries)
     maxRetries = maxRetries or 3
     
@@ -78,10 +91,22 @@ function ChatAdapter:SendMessageWithRetry(message, maxRetries)
         if self:SendMessage(message) then
             return true
         end
-        wait(0.1) -- Pequeno delay entre tentativas
+        
+        -- Delay progressivo entre tentativas
+        wait(0.1 * i)
     end
     
     return false
+end
+
+-- Testar conexão
+function ChatAdapter:TestConnection()
+    return self:SendMessage("Teste de conexão")
+end
+
+-- Obter tipo de chat atual
+function ChatAdapter:GetCurrentChatType()
+    return self:DetectChatType()
 end
 
 return ChatAdapter 
