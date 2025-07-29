@@ -31,17 +31,19 @@ K9-FrameWork/
 loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Main.lua'))()
 ```
 
-### Método 2: Com configurações
+### Método 2: Com configurações (igual ao zy_yz)
 ```lua
-loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/loadstring.lua'))()({
-    Keybind = Enum.KeyCode.Home,
-    Tempo = 2.0,
+local Options = {
+    Keybind = Enum.KeyCode.Home, --> Keybind para mostrar/esconder a UI
+    Tempo = 2.5, --> Tempo para enviar mensagem
+    Rainbow = false, --> Deixar a UI mais colorida (true/false)
+
     Language = {
-        UI = 'en-us',
-        Words = 'pt-br'
+        UI = 'pt-br', --> Alterar a linguagem da UI, disponíveis: pt-br, en-us, es-es
+        Words = 'pt-br' --> Alterar a linguagem dos números em extenso, disponíveis: pt-br, en-us, es-es
     },
-    Rainbow = true
-})
+};
+loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Main.lua'))(Options);
 ```
 
 ## ✅ Funcionalidades
