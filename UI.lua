@@ -1,4 +1,4 @@
--- UI.lua - Interface minimalista e bonita
+-- UI.lua - Interface minimalista e funcional
 -- Criado por K9zzzzz
 
 local Players = game:GetService("Players")
@@ -43,7 +43,7 @@ local function ImportModules()
     return success1 and success2 -- Extenso e ChatAdapter são essenciais
 end
 
--- Função para criar texto
+-- Função para criar texto minimalista
 local function CreateText(parent, text, size, position, color)
     local label = Instance.new("TextLabel")
     label.Size = size
@@ -57,12 +57,12 @@ local function CreateText(parent, text, size, position, color)
     return label
 end
 
--- Função para criar input minimalista
+-- Função para criar input compacto
 local function CreateInput(parent, placeholder, size, position, callback)
     local input = Instance.new("TextBox")
     input.Size = size
     input.Position = position
-    input.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    input.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     input.BorderSizePixel = 0
     input.PlaceholderText = placeholder
     input.Text = ""
@@ -73,16 +73,16 @@ local function CreateInput(parent, placeholder, size, position, callback)
     
     -- Corner radius
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
+    corner.CornerRadius = UDim.new(0, 3)
     corner.Parent = input
     
-    -- Hover effect
+    -- Hover effect suave
     input.Focused:Connect(function()
-        TweenService:Create(input, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)}):Play()
+        TweenService:Create(input, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
     end)
     
     input.FocusLost:Connect(function()
-        TweenService:Create(input, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+        TweenService:Create(input, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
         if callback then
             callback(input.Text)
         end
@@ -91,52 +91,52 @@ local function CreateInput(parent, placeholder, size, position, callback)
     return input
 end
 
--- Função para criar toggle minimalista
+-- Função para criar toggle compacto
 local function CreateToggle(parent, size, position, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, size.X.Offset + 50, 0, size.Y.Offset)
+    frame.Size = UDim2.new(0, size.X.Offset + 40, 0, size.Y.Offset)
     frame.Position = position
     frame.BackgroundTransparency = 1
     frame.Parent = parent
     
     local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, 35, 0, 18)
+    toggle.Size = UDim2.new(0, 30, 0, 16)
     toggle.Position = UDim2.new(0, 0, 0, 0)
-    toggle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    toggle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     toggle.BorderSizePixel = 0
     toggle.Text = ""
     toggle.Parent = frame
     
     -- Corner radius
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 9)
+    corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = toggle
     
     -- Handle
     local handle = Instance.new("Frame")
-    handle.Size = UDim2.new(0, 14, 0, 14)
+    handle.Size = UDim2.new(0, 12, 0, 12)
     handle.Position = UDim2.new(0, 2, 0, 2)
     handle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     handle.BorderSizePixel = 0
     handle.Parent = toggle
     
     local handleCorner = Instance.new("UICorner")
-    handleCorner.CornerRadius = UDim.new(0, 7)
+    handleCorner.CornerRadius = UDim.new(0, 6)
     handleCorner.Parent = handle
     
     -- Label
-    local label = CreateText(frame, "Pular:", UDim2.new(0, 45, 1, 0), UDim2.new(0, 45, 0, 0))
+    local label = CreateText(frame, "Pular:", UDim2.new(0, 35, 1, 0), UDim2.new(0, 35, 0, 0))
     
     local isOn = false
     
     toggle.MouseButton1Click:Connect(function()
         isOn = not isOn
         if isOn then
-            TweenService:Create(handle, TweenInfo.new(0.2), {Position = UDim2.new(1, -16, 0, 2)}):Play()
-            TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 200, 100)}):Play()
+            TweenService:Create(handle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(1, -14, 0, 2)}):Play()
+            TweenService:Create(toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(0, 200, 100)}):Play()
         else
-            TweenService:Create(handle, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-            TweenService:Create(toggle, TweenService:Create(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+            TweenService:Create(handle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+            TweenService:Create(toggle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
         end
         if callback then
             callback(isOn)
@@ -146,12 +146,12 @@ local function CreateToggle(parent, size, position, callback)
     return toggle
 end
 
--- Função para criar botão play minimalista
+-- Função para criar botão play compacto
 local function CreatePlayButton(parent, size, position, callback)
     local button = Instance.new("TextButton")
     button.Size = size
     button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     button.BorderSizePixel = 0
     button.Text = "▶"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -161,16 +161,16 @@ local function CreatePlayButton(parent, size, position, callback)
     
     -- Corner radius
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = button
     
-    -- Hover effect
+    -- Hover effect suave
     button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
     end)
     
     button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)}):Play()
     end)
     
     button.MouseButton1Click:Connect(function()
@@ -182,7 +182,7 @@ local function CreatePlayButton(parent, size, position, callback)
     return button
 end
 
--- Função para tornar frame draggable
+-- Função para tornar frame draggable (PC e Mobile)
 local function MakeDraggable(frame)
     local dragging = false
     local dragInput = nil
@@ -194,6 +194,7 @@ local function MakeDraggable(frame)
         frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
     
+    -- PC
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -219,6 +220,21 @@ local function MakeDraggable(frame)
             update(input)
         end
     end)
+    
+    -- Mobile (Touch)
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
 end
 
 -- Função para enviar mensagem usando módulos importados
@@ -234,67 +250,67 @@ local function SendMessage(numero)
     return Modules.ChatAdapter:SendMessageWithRetry(message, 3)
 end
 
--- Função para criar a UI minimalista e bonita
+-- Função para criar a UI compacta e minimalista
 local function CreateUI()
     -- Criar ScreenGui
     ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AutoJJsUI"
     ScreenGui.Parent = game:GetService("CoreGui")
     
-    -- Criar frame principal (minimalista)
+    -- Criar frame principal (compacto e alto)
     MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 280, 0, 180)
-    MainFrame.Position = UDim2.new(0.5, -140, 0.5, -90)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    MainFrame.Size = UDim2.new(0, 220, 0, 280)
+    MainFrame.Position = UDim2.new(0.5, -110, 0.5, -140)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
     
     -- Corner radius
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = MainFrame
     
     -- Stroke sutil
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(255, 255, 255)
-    stroke.Transparency = 0.9
+    stroke.Transparency = 0.95
     stroke.Thickness = 1
     stroke.Parent = MainFrame
     
-    -- Título minimalista
+    -- Título compacto
     local titleFrame = Instance.new("Frame")
-    titleFrame.Size = UDim2.new(1, 0, 0, 25)
+    titleFrame.Size = UDim2.new(1, 0, 0, 20)
     titleFrame.Position = UDim2.new(0, 0, 0, 0)
     titleFrame.BackgroundTransparency = 1
     titleFrame.Parent = MainFrame
     
-    local k9Text = CreateText(titleFrame, "K9zzzzz", UDim2.new(0, 60, 1, 0), UDim2.new(0, 8, 0, 0), Color3.fromRGB(0, 255, 0))
-    local autoText = CreateText(titleFrame, " - Auto", UDim2.new(0, 70, 1, 0), UDim2.new(0, 68, 0, 0))
-    local jjsText = CreateText(titleFrame, "JJs[v1.0.5]", UDim2.new(0, 90, 1, 0), UDim2.new(0, 138, 0, 0), Color3.fromRGB(255, 0, 0))
+    local k9Text = CreateText(titleFrame, "K9zzzzz", UDim2.new(0, 50, 1, 0), UDim2.new(0, 5, 0, 0), Color3.fromRGB(0, 255, 0))
+    local autoText = CreateText(titleFrame, " - Auto", UDim2.new(0, 60, 1, 0), UDim2.new(0, 55, 0, 0))
+    local jjsText = CreateText(titleFrame, "JJs[v1.0.5]", UDim2.new(0, 70, 1, 0), UDim2.new(0, 115, 0, 0), Color3.fromRGB(255, 0, 0))
     
-    -- Começar do
-    local startLabel = CreateText(MainFrame, "Começar do:", UDim2.new(0, 90, 0, 18), UDim2.new(0, 8, 0, 35))
-    local startInput = CreateInput(MainFrame, "1", UDim2.new(0, 170, 0, 22), UDim2.new(0, 100, 0, 35), function(value)
+    -- Começar do (campo menor)
+    local startLabel = CreateText(MainFrame, "Começar do:", UDim2.new(0, 70, 0, 15), UDim2.new(0, 5, 0, 30))
+    local startInput = CreateInput(MainFrame, "1", UDim2.new(0, 140, 0, 18), UDim2.new(0, 75, 0, 30), function(value)
         Config.StartNumber = tonumber(value) or 1
     end)
     startInput.Text = tostring(Config.StartNumber or 1)
     
-    -- Até o
-    local endLabel = CreateText(MainFrame, "Até o:", UDim2.new(0, 90, 0, 18), UDim2.new(0, 8, 0, 62))
-    local endInput = CreateInput(MainFrame, "2", UDim2.new(0, 170, 0, 22), UDim2.new(0, 100, 0, 62), function(value)
+    -- Até o (campo menor)
+    local endLabel = CreateText(MainFrame, "Até o:", UDim2.new(0, 70, 0, 15), UDim2.new(0, 5, 0, 55))
+    local endInput = CreateInput(MainFrame, "2", UDim2.new(0, 140, 0, 18), UDim2.new(0, 75, 0, 55), function(value)
         Config.EndNumber = tonumber(value) or 2
     end)
     endInput.Text = tostring(Config.EndNumber or 2)
     
-    -- Final do Prefix
-    local prefixLabel = CreateText(MainFrame, "Final do Prefix:", UDim2.new(0, 90, 0, 18), UDim2.new(0, 8, 0, 89))
-    local prefixInput = CreateInput(MainFrame, "!", UDim2.new(0, 170, 0, 22), UDim2.new(0, 100, 0, 89), function(value)
+    -- Final do Prefix (campo menor)
+    local prefixLabel = CreateText(MainFrame, "Final do Prefix:", UDim2.new(0, 70, 0, 15), UDim2.new(0, 5, 0, 80))
+    local prefixInput = CreateInput(MainFrame, "!", UDim2.new(0, 140, 0, 18), UDim2.new(0, 75, 0, 80), function(value)
         Config.FinalPrompt = value or "!"
     end)
     prefixInput.Text = Config.FinalPrompt or "!"
     
-    -- Pular toggle
-    local skipToggle = CreateToggle(MainFrame, UDim2.new(0, 35, 0, 18), UDim2.new(0, 8, 0, 116), function(isOn)
+    -- Pular toggle (compacto)
+    local skipToggle = CreateToggle(MainFrame, UDim2.new(0, 30, 0, 16), UDim2.new(0, 5, 0, 105), function(isOn)
         Config.SkipMode = isOn
         if Modules.Notification then
             if isOn then
@@ -305,12 +321,12 @@ local function CreateUI()
         end
     end)
     
-    -- Botão play
-    local playButton = CreatePlayButton(MainFrame, UDim2.new(1, -16, 0, 35), UDim2.new(0, 8, 0, 140), function()
+    -- Botão play (compacto)
+    local playButton = CreatePlayButton(MainFrame, UDim2.new(1, -10, 0, 30), UDim2.new(0, 5, 0, 130), function()
         ToggleAutoJJs()
     end)
     
-    -- Tornar draggable
+    -- Tornar draggable (PC e Mobile)
     MakeDraggable(MainFrame)
     
     -- Mostrar notificação de carregamento
@@ -319,7 +335,7 @@ local function CreateUI()
     end
 end
 
--- Função para iniciar/parar
+-- Função para iniciar/parar melhorada
 local function ToggleAutoJJs()
     if IsRunning then
         IsRunning = false

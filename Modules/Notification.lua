@@ -1,5 +1,5 @@
 -- Notification.lua
--- Sistema de notificações pequeno e elegante
+-- Sistema de notificações ultra compacto
 -- Criado por K9zzzzz
 
 local TweenService = game:GetService("TweenService")
@@ -7,17 +7,17 @@ local RunService = game:GetService("RunService")
 
 local Notification = {}
 
--- Função para mostrar notificação
+-- Função para mostrar notificação ultra compacta
 function Notification:Show(title, text, duration, notificationType)
     duration = duration or 3
     notificationType = notificationType or "info"
     
     -- Cores baseadas no tipo
     local colors = {
-        info = {bg = Color3.fromRGB(25, 25, 35), stroke = Color3.fromRGB(0, 150, 255), title = Color3.fromRGB(0, 150, 255)},
-        success = {bg = Color3.fromRGB(25, 35, 25), stroke = Color3.fromRGB(0, 200, 100), title = Color3.fromRGB(0, 200, 100)},
-        warning = {bg = Color3.fromRGB(35, 35, 25), stroke = Color3.fromRGB(255, 200, 0), title = Color3.fromRGB(255, 200, 0)},
-        error = {bg = Color3.fromRGB(35, 25, 25), stroke = Color3.fromRGB(255, 100, 100), title = Color3.fromRGB(255, 100, 100)}
+        info = {bg = Color3.fromRGB(20, 20, 30), stroke = Color3.fromRGB(0, 150, 255), title = Color3.fromRGB(0, 150, 255)},
+        success = {bg = Color3.fromRGB(20, 30, 20), stroke = Color3.fromRGB(0, 200, 100), title = Color3.fromRGB(0, 200, 100)},
+        warning = {bg = Color3.fromRGB(30, 30, 20), stroke = Color3.fromRGB(255, 200, 0), title = Color3.fromRGB(255, 200, 0)},
+        error = {bg = Color3.fromRGB(30, 20, 20), stroke = Color3.fromRGB(255, 100, 100), title = Color3.fromRGB(255, 100, 100)}
     }
     
     local colorScheme = colors[notificationType] or colors.info
@@ -27,15 +27,15 @@ function Notification:Show(title, text, duration, notificationType)
     screenGui.Parent = game:GetService("CoreGui")
     
     local notificationFrame = Instance.new("Frame")
-    notificationFrame.Size = UDim2.new(0, 200, 0, 45)
-    notificationFrame.Position = UDim2.new(1, 200, 1, -60)
+    notificationFrame.Size = UDim2.new(0, 160, 0, 35)
+    notificationFrame.Position = UDim2.new(1, 160, 1, -45)
     notificationFrame.BackgroundColor3 = colorScheme.bg
     notificationFrame.BorderSizePixel = 0
     notificationFrame.Parent = screenGui
     
     -- Corner radius
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = notificationFrame
     
     -- Stroke
@@ -53,8 +53,8 @@ function Notification:Show(title, text, duration, notificationType)
     
     -- Ícone
     local iconLabel = Instance.new("TextLabel")
-    iconLabel.Size = UDim2.new(0, 16, 0, 16)
-    iconLabel.Position = UDim2.new(0, 8, 0, 8)
+    iconLabel.Size = UDim2.new(0, 12, 0, 12)
+    iconLabel.Position = UDim2.new(0, 5, 0, 5)
     iconLabel.BackgroundTransparency = 1
     iconLabel.Text = iconText
     iconLabel.TextColor3 = colorScheme.title
@@ -64,8 +64,8 @@ function Notification:Show(title, text, duration, notificationType)
     
     -- Título
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -30, 0, 15)
-    titleLabel.Position = UDim2.new(0, 28, 0, 3)
+    titleLabel.Size = UDim2.new(1, -25, 0, 12)
+    titleLabel.Position = UDim2.new(0, 20, 0, 2)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = title
     titleLabel.TextColor3 = colorScheme.title
@@ -75,8 +75,8 @@ function Notification:Show(title, text, duration, notificationType)
     
     -- Texto
     local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, -30, 0, 20)
-    textLabel.Position = UDim2.new(0, 28, 0, 20)
+    textLabel.Size = UDim2.new(1, -25, 0, 12)
+    textLabel.Position = UDim2.new(0, 20, 0, 17)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = text
     textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -84,17 +84,17 @@ function Notification:Show(title, text, duration, notificationType)
     textLabel.Font = Enum.Font.Gotham
     textLabel.Parent = notificationFrame
     
-    -- Animação de entrada
+    -- Animação de entrada suave
     local enterTween = TweenService:Create(notificationFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -210, 1, -60)
+        Position = UDim2.new(1, -170, 1, -45)
     })
     enterTween:Play()
     
-    -- Animar saída
+    -- Animar saída suave
     spawn(function()
         wait(duration)
         local exitTween = TweenService:Create(notificationFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Position = UDim2.new(1, 200, 1, -60)
+            Position = UDim2.new(1, 160, 1, -45)
         })
         exitTween:Play()
         
