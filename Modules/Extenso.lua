@@ -1,5 +1,5 @@
 -- Extenso.lua
--- Sistema avançado de conversão numérica
+-- Sistema avançado de conversão numérica para extenso
 -- Criado por K9zzzzz
 
 local Extenso = {}
@@ -195,9 +195,33 @@ end
 function Extenso:TestarConversao()
     local testes = {1, 10, 25, 100, 150, 1000, 1500, 1000000, 999999999}
     
+    print("=== Teste do Módulo Extenso ===")
     for _, numero in ipairs(testes) do
         print(numero .. " = " .. self:GetNumero(numero))
     end
+    print("================================")
+end
+
+-- Função para validar número
+function Extenso:ValidarNumero(numero)
+    if type(numero) == "number" then
+        return numero > 0 and numero <= 999999999999
+    elseif type(numero) == "string" then
+        local num = tonumber(numero)
+        return num and num > 0 and num <= 999999999999
+    end
+    return false
+end
+
+-- Função para obter estatísticas
+function Extenso:GetStats()
+    return {
+        MaxNumber = 999999999999,
+        BasicNumbers = #numerosBasicos,
+        Dezenas = #dezenas,
+        Centenas = #centenas,
+        Milhares = #milhares
+    }
 end
 
 return Extenso 

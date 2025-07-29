@@ -1,82 +1,164 @@
-# 🦘 K9-FrameWork - Auto JJs Script
+# Auto JJS v2.1 - K9zzzzz
 
-Script simples e funcional para contar JJ's automaticamente no chat.
+Sistema avançado de automação para polichinelos em jogos do Exército Brasileiro no Roblox.
 
-**Criado por K9zzzzz**
+## 🚀 Características
+
+- **Interface moderna**: UI rainbow, minimalista e responsiva
+- **Sistema modular**: Arquitetura organizada e escalável
+- **Internacionalização**: Suporte para PT-BR, EN-US e ES-ES
+- **Chat adaptativo**: Funciona com LegacyChatService (chat antigo)
+- **Banco de numeros avançado**: Suporte para números gigantes
+- **Notificações elegantes**: Sistema de notificações compacto
+- **Compatibilidade**: PC e Mobile
 
 ## 📁 Estrutura do Projeto
 
 ```
-K9-FrameWork/
-├── 📄 Main.lua              # Arquivo principal
-├── 📄 UI.lua                # Interface gráfica
-├── 📄 Notification.lua      # Sistema de notificações
-├── 📄 LICENSE               # Licença MIT
-├── 📄 README.md             # Este arquivo
-├── 📁 I18N/                 # Internacionalização
-│   ├── pt-br.lua           # Português Brasileiro
-│   ├── en-us.lua           # Inglês Americano
-│   ├── es-es.lua           # Espanhol
-│   └── en-us-dev.lua       # Inglês (Desenvolvimento)
-└── 📁 Modules/              # Módulos do sistema
-    ├── Character.lua        # Gerenciamento de personagem
-    ├── Extenso.lua          # Conversão de números (Gambiarra)
-    ├── RemoteChat.lua       # Sistema de chat
-    └── Request.lua          # Requisições HTTP
+K9zzzzzz-Script/
+├── Main.lua                # Script principal (bootstrap)
+├── UI.lua                  # Interface do usuário
+├── Notification.lua        # Sistema de notificações
+├── README.md               # Documentação
+├── LICENSE                 # Licença MIT
+│
+├── Modules/                # Módulos de funcionalidade
+│   ├── Character.lua       # Gerenciamento de personagem
+│   ├── Extenso.lua         # Conversão numérica
+│   ├── RemoteChat.lua      # Sistema de chat antigo
+│   └── Request.lua         # Utilitários HTTP
+│
+└── I18N/                   # Internacionalização
+    ├── pt-br.lua           # Português brasileiro
+    ├── en-us.lua           # Inglês americano
+    └── es-es.lua           # Espanhol
 ```
 
-## 🚀 Como Usar
+## 🎮 Como Usar
 
-### Método 1: Uso básico
-```lua
-loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Main.lua'))()
-```
 
-### Método 2: Com configurações
+### Exemplo Completo
 ```lua
 local Options = {
-    StartNumber = 1,        -- Número inicial
-    EndNumber = 100,        -- Número final
-    FinalPrompt = "!",      -- Prompt final
-    SkipMode = false,       -- Modo pular
-    Tempo = 2.5            -- Velocidade
-};
-loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Main.lua'))(Options);
+    Tempo = 2.0,           -- Mensagens a cada 2 segundos
+    Language = "en-us"     -- Interface em inglês
+}
+
+loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Main.lua'))(Options)
 ```
 
-## ✅ Funcionalidades
+### Configurações da UI
+- **Começar do**: Definido na interface (padrão: 1)
+- **Até o**: Definido na interface (padrão: 10)
+- **Final do Prefix**: Definido na interface (padrão: "!")
 
-- **UI igual ao zy_yz**: Interface simples e funcional
-- **Gambiarra do Extenso**: Converte qualquer número para extenso
-- **Sistema de chat**: Suporte a chat antigo e novo
-- **Interface draggable**: Pode ser movida
-- **Toggle de pular**: Opção para pular números
-- **Configuração flexível**: Qualquer número inicial e final
+## 🎨 Interface
 
-## 🎯 Controles
+- **Tamanho**: 1/8 da largura e 1/2 da altura da tela
+- **Design**: Fundo preto com efeitos rainbow
+- **Campos**: Começar do, Até o, Final do Prefix
+- **Botão**: ▶ PULAR (rainbow animado)
+- **Draggable**: Funciona no PC e Mobile
 
-- **Mouse**: Arrastar interface
-- **Botão Play**: Iniciar/Parar contagem
-- **Inputs**: Configurar números e prompt
-- **Toggle**: Ativar/desativar modo pular
+## 🔧 Módulos
 
-## 🔧 Gambiarra do Extenso
+### Character.lua
+- Gerenciamento de personagem
+- Informações do jogador
+- Monitoramento de mudanças
 
-O script usa uma gambiarra inteligente para converter qualquer número para extenso:
+### Extenso.lua
+- Conversão numérica avançada
+- Suporte para números gigantes
+- Banco de dados para números complexos
 
-- **Números 1-99**: Conversão normal
-- **Números 100+**: Gambiarra que converte cada dígito
+### RemoteChat.lua
+- Sistema para chat antigo (LegacyChatService)
+- Retry automático
+- Validação de mensagens
 
-Exemplo:
-- 123 = "UM DOIS TRÊS"
-- 1000 = "UM ZERO ZERO ZERO"
+### Request.lua
+- Utilitários HTTP
+- Carregamento de scripts
+- Testes de conectividade
 
-## ⚠️ Avisos
+## 🌍 Internacionalização
 
-- Use por sua conta e risco
-- Respeite as regras do jogo
-- Não abuse do script
+### Idiomas Suportados
+- **pt-br**: Português brasileiro
+- **en-us**: Inglês americano
+- **es-es**: Espanhol
+
+### Estrutura I18N
+```lua
+I18N = {
+    UI = { ... },           -- Interface
+    Notifications = { ... }, -- Notificações
+    Numbers = { ... },       -- Números
+    Errors = { ... },        -- Erros
+    Success = { ... },       -- Sucessos
+    Config = { ... }         -- Configurações
+}
+```
+
+## 🎯 Funcionalidades
+
+### Sistema de Números
+- Conversão automática para extenso
+- Suporte para números de 1 a trilhões
+- Banco de dados para números gigantes
+- Validação de entrada
+
+### Sistema de Chat
+- Compatível com LegacyChatService
+- Retry automático em caso de falha
+- Validação de tamanho de mensagem
+- Monitoramento de status
+
+### Sistema de Notificações
+- Notificações compactas
+- Posicionamento no canto inferior direito
+- Cores por tipo (info, success, warning, error)
+- Animações suaves
+
+## 🔄 Próximas Atualizações
+
+- [ ] Suporte para TextChatService (chat novo)
+- [ ] Mais idiomas
+- [ ] Configurações avançadas
+- [ ] Sistema de temas
+- [ ] Logs detalhados
+
+## 🛠️ Desenvolvimento
+
+### Testando Módulos
+```lua
+-- Testar módulo Extenso
+local ext = loadstring(game:HttpGet('URL/Modules/Extenso.lua'))()
+ext:TestarConversao()
+
+-- Testar módulo RemoteChat
+local chat = loadstring(game:HttpGet('URL/Modules/RemoteChat.lua'))()
+chat:Test()
+
+-- Testar módulo Character
+local char = loadstring(game:HttpGet('URL/Modules/Character.lua'))()
+char:Test()
+```
+
+### Adicionando Novo Idioma
+1. Criar arquivo `I18N/novo-idioma.lua`
+2. Seguir estrutura dos outros arquivos
+3. Adicionar suporte na UI.lua
+
+## 📝 Licença
+
+MIT License - veja arquivo [LICENSE](LICENSE) para detalhes.
+
+## 👨‍💻 Autor
+
+**K9zzzzz** - Desenvolvedor do Auto JJS v2.1
 
 ---
 
-**Criado por K9zzzzz** - Script proprietário 
+⭐ **Se este projeto te ajudou, considere dar uma estrela!** 
