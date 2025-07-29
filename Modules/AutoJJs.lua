@@ -1,133 +1,168 @@
+-- Auto JJS Melhorado - Core Module
+-- Criado por K9zzzzz
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+
 local AutoJJs = {}
+AutoJJs.__index = AutoJJs
 
--- Variáveis internas
-local running = false
-local paused = false
-local current = 0
-local total = 0
-local delay = 1
-local finalPrompt = "!"
-local progressBar
+-- Variáveis de controle
+local IsRunning = false
+local CurrentNumber = 1
+local UIVisible = true
+local Config = {}
+local UI = nil
+local Numbers = nil
+local Notification = nil
 
-function AutoJJs:Start(quantity, prompt, d, numberToWords)
-    running = true
-    paused = false
-    current = 1
-    total = quantity
-    finalPrompt = prompt or "!"
-    delay = tonumber(d) or 1
-
-    while running and current <= total do
-        if paused then
-            repeat task.wait() until not paused
-        end
-
-        -- Monta a mensagem
-        local msg = numberToWords(current) .. finalPrompt
-
-        -- Envia no chat
-        game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
-
-        -- Atualiza barra de progresso
-        if progressBar then
-            local pct = current / total
-            progressBar.Size = UDim2.new(pct, 0, 1, 0)
-        end
-
-        current += 1
-        task.wait(delay)
+-- Função para enviar mensagem
+local function SendMessage(number)
+    local language = Config.Language.Words
+    local numberText = Numbers:GetNumber(language, number)
+    if numberText then
+        local message = numberText .. Config.FinalPrompt
+        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+        return true
     end
-
-    if running then
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "K9zzzzzz Script",
-            Text = "✅ Auto JJs concluído!",
-            Duration = 3
-        })
-    end
-    running = false
+    return false
 end
 
-function AutoJJs:Pause() paused = true end
-function AutoJJs:Resume() paused = false end
-function AutoJJs:Stop() running = false end
-
--- UI do Auto JJs
-function AutoJJs:OpenUI(ScreenGui, MainFrame)
-    MainFrame:ClearAllChildren()
-
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, 0, 0, 50)
-    Title.Text = "Auto JJs"
-    Title.Font = Enum.Font.GothamBold
-    Title.TextScaled = true
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.BackgroundTransparency = 1
-    Title.Parent = MainFrame
-
-    -- Inputs: Quantidade, Prompt, Delay
-    local function CreateInput(labelText, order, default)
-        local Label = Instance.new("TextLabel")
-        Label.Size = UDim2.new(0.4, 0, 0, 40)
-        Label.Position = UDim2.new(0.05, 0, 0, 70 + order * 50)
-        Label.Text = labelText
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Label.BackgroundTransparency = 1
-        Label.Font = Enum.Font.Gotham
-        Label.TextSize = 16
-        Label.Parent = MainFrame
-
-        local Box = Instance.new("TextBox")
-        Box.Size = UDim2.new(0.4, 0, 0, 40)
-        Box.Position = UDim2.new(0.5, 0, 0, 70 + order * 50)
-        Box.Text = default
-        Box.ClearTextOnFocus = false
-        Box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        Box.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Box.Font = Enum.Font.Gotham
-        Box.TextSize = 16
-        Box.Parent = MainFrame
-        return Box
-    end
-
-    local QuantityBox = CreateInput("Quantidade", 0, "100")
-    local PromptBox = CreateInput("Final do Prompt", 1, "!")
-    local DelayBox = CreateInput("Delay (seg)", 2, "0.5")
-
-    -- Barra de progresso
-    local ProgressFrame = Instance.new("Frame")
-    ProgressFrame.Size = UDim2.new(0.9, 0, 0, 20)
-    ProgressFrame.Position = UDim2.new(0.05, 0, 0, 230)
-    ProgressFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    ProgressFrame.Parent = MainFrame
-
-    progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(0, 0, 1, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
-    progressBar.Parent = ProgressFrame
-
-    -- Botões: Start, Pause, Resume, Stop, Voltar
-    local function CreateButton(text, xPos, callback)
-        local Btn = Instance.new("TextButton")
-        Btn.Size = UDim2.new(0.25, 0, 0, 40)
-        Btn.Position = UDim2.new(xPos, 0, 1, -50)
-        Btn.Text = text
-        Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-        Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Btn.Font = Enum.Font.GothamBold
-        Btn.TextSize = 16
-        Btn.Parent = MainFrame
-        Btn.MouseButton1Click:Connect(function()
-            callback()
-        end)
-    end
-
-    CreateButton("Iniciar", 0.05, function()
-        AutoJJs:Start(tonumber(QuantityBox.Text), PromptBox.Text, DelayBox.Text, NumberToWords)
+-- Função principal do loop
+local function StartAutoJJs()
+    if IsRunning then return end
+    
+    IsRunning = true
+    CurrentNumber = Config.StartNumber or 1
+    
+    Notification:Show("Auto JJS", "Iniciado! Começando do " .. CurrentNumber, 2)
+    UI:UpdateStatus("Executando...")
+    
+    spawn(function()
+        while IsRunning and CurrentNumber <= (Config.EndNumber or 80) do
+            if SendMessage(CurrentNumber) then
+                UI:UpdateCounter(CurrentNumber)
+                CurrentNumber = CurrentNumber + 1
+            else
+                Notification:Show("Auto JJS", "Erro ao enviar mensagem!", 2)
+                break
+            end
+            
+            -- Delay com variação anti-detecção
+            local delay = Config.Tempo
+            if Config.AntiDetection then
+                delay = delay + (math.random() - 0.5) * 0.2
+            end
+            wait(delay)
+        end
+        
+        if CurrentNumber > (Config.EndNumber or 80) then
+            Notification:Show("Auto JJS", "Concluído! Chegou ao número " .. (Config.EndNumber or 80), 3)
+        end
+        
+        IsRunning = false
+        UI:UpdateStatus("Parado")
     end)
-    CreateButton("Pausar", 0.35, function() AutoJJs:Pause() end)
-    CreateButton("Retomar", 0.65, function() AutoJJs:Resume() end)
-    CreateButton("Parar", 0.95, function() AutoJJs:Stop() end)
 end
 
-return AutoJJs
+-- Função para parar
+local function StopAutoJJs()
+    IsRunning = false
+    Notification:Show("Auto JJS", "Parado!", 2)
+    UI:UpdateStatus("Parado")
+end
+
+-- Função para toggle
+local function ToggleAutoJJs()
+    if IsRunning then
+        StopAutoJJs()
+    else
+        StartAutoJJs()
+    end
+end
+
+-- Função para mostrar/esconder UI
+local function ToggleUI()
+    UIVisible = not UIVisible
+    UI:SetVisible(UIVisible)
+end
+
+-- Input handler
+local function SetupInputHandler()
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.KeyCode == Config.Keybind then
+            ToggleUI()
+        end
+    end)
+end
+
+-- Função de inicialização
+function AutoJJs:Initialize(options)
+    Config = options or {}
+    
+    -- Configurações padrão
+    Config.Keybind = Config.Keybind or Enum.KeyCode.RightControl
+    Config.Tempo = Config.Tempo or 2.5
+    Config.Rainbow = Config.Rainbow or false
+    Config.Language = Config.Language or {UI = 'pt-br', Words = 'pt-br'}
+    Config.StartNumber = Config.StartNumber or 1
+    Config.EndNumber = Config.EndNumber or 80
+    Config.FinalPrompt = Config.FinalPrompt or "!"
+    Config.AntiDetection = Config.AntiDetection ~= false
+    
+    -- Inicializar módulos
+    UI = UI or require(script.Parent.UI)
+    Numbers = Numbers or require(script.Parent.Numbers)
+    Notification = Notification or require(script.Parent.Notification)
+    
+    -- Configurar UI
+    UI:Initialize(Config)
+    
+    -- Configurar input handler
+    SetupInputHandler()
+    
+    -- Configurar callbacks da UI
+    UI:SetStartCallback(StartAutoJJs)
+    UI:SetStopCallback(StopAutoJJs)
+    UI:SetToggleCallback(ToggleAutoJJs)
+    
+    -- Mostrar notificação inicial
+    Notification:Show("Auto JJS Melhorado", "Pressione " .. Config.Keybind.Name .. " para mostrar/esconder a UI", 4)
+    
+    -- Mostrar créditos
+    spawn(function()
+        wait(2)
+        Notification:Success("K9zzzzz", "Script criado por K9zzzzz", 5)
+    end)
+    
+    print("Auto JJS Melhorado carregado!")
+    print("Pressione " .. Config.Keybind.Name .. " para mostrar/esconder a UI")
+    print("Criado por K9zzzzz")
+end
+
+-- Função para atualizar configurações
+function AutoJJs:UpdateConfig(newConfig)
+    for key, value in pairs(newConfig) do
+        Config[key] = value
+    end
+    
+    if UI then
+        UI:UpdateConfig(Config)
+    end
+end
+
+-- Função para obter status
+function AutoJJs:GetStatus()
+    return {
+        IsRunning = IsRunning,
+        CurrentNumber = CurrentNumber,
+        Config = Config
+    }
+end
+
+return AutoJJs 
