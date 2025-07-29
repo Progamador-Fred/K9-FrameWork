@@ -4,6 +4,8 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 
 local Player = Players.LocalPlayer
 
@@ -14,9 +16,75 @@ local IsRunning = false
 local CurrentNumber = 1
 local Config = {}
 
--- Carregar módulos
-local Extenso = require(script.Parent.Modules.Extenso)
-local RemoteChat = require(script.Parent.Modules.RemoteChat)
+-- Gambiarra do Extenso (tudo em um arquivo)
+local numerosBasicos = {
+    [1] = "UM", [2] = "DOIS", [3] = "TRÊS", [4] = "QUATRO", [5] = "CINCO",
+    [6] = "SEIS", [7] = "SETE", [8] = "OITO", [9] = "NOVE", [10] = "DEZ",
+    [11] = "ONZE", [12] = "DOZE", [13] = "TREZE", [14] = "QUATORZE", [15] = "QUINZE",
+    [16] = "DEZESSEIS", [17] = "DEZESSETE", [18] = "DEZOITO", [19] = "DEZENOVE", [20] = "VINTE"
+}
+
+local dezenas = {
+    [30] = "TRINTA", [40] = "QUARENTA", [50] = "CINQUENTA",
+    [60] = "SESSENTA", [70] = "SETENTA", [80] = "OITENTA", [90] = "NOVENTA"
+}
+
+-- Função para converter número para extenso
+local function ConverterNumero(numero)
+    if numero <= 20 then
+        return numerosBasicos[numero]
+    elseif numero <= 99 then
+        local dezena = math.floor(numero / 10) * 10
+        local unidade = numero % 10
+        
+        if unidade == 0 then
+            return dezenas[dezena]
+        else
+            return dezenas[dezena] .. " E " .. numerosBasicos[unidade]
+        end
+    else
+        -- Gambiarra para números grandes
+        local numeroStr = tostring(numero)
+        local resultado = ""
+        
+        for i = 1, #numeroStr do
+            local digito = tonumber(numeroStr:sub(i, i))
+            if digito > 0 then
+                resultado = resultado .. numerosBasicos[digito] .. " "
+            end
+        end
+        
+        return resultado:gsub("%s+$", "")
+    end
+end
+
+-- Função para enviar mensagem
+local function SendMessage(numero)
+    local numeroExtenso = ConverterNumero(numero)
+    local message = numeroExtenso .. (Config.FinalPrompt or "!")
+    
+    local success = false
+    
+    -- Tentar LegacyChatService primeiro
+    local success1 = pcall(function()
+        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(message, "All")
+    end)
+    
+    if success1 then
+        success = true
+    else
+        -- Tentar TextChatService
+        local success2 = pcall(function()
+            TextChatService.ChatWindow:SendAsync(message)
+        end)
+        
+        if success2 then
+            success = true
+        end
+    end
+    
+    return success
+end
 
 -- Função para criar texto
 local function CreateText(parent, text, size, position, color)
@@ -151,6 +219,45 @@ local function CreatePlayButton(parent, size, position, callback)
     return button
 end
 
+-- Função para tornar frame draggable
+local function MakeDraggable(frame)
+    local dragging = false
+    local dragInput = nil
+    local dragStart = nil
+    local startPos = nil
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
 -- Função para criar a UI
 local function CreateUI()
     -- Criar ScreenGui
@@ -222,54 +329,6 @@ local function CreateUI()
     
     -- Tornar draggable
     MakeDraggable(MainFrame)
-end
-
--- Função para tornar frame draggable
-function MakeDraggable(frame)
-    local dragging = false
-    local dragInput = nil
-    local dragStart = nil
-    local startPos = nil
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-    
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-    
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
-end
-
--- Função para enviar mensagem
-local function SendMessage(numero)
-    -- Usar a gambiarra do Extenso para converter qualquer número
-    local numeroExtenso = Extenso:GetNumero(numero)
-    local message = numeroExtenso .. (Config.FinalPrompt or "!")
-    
-    return RemoteChat:SendMessage(message)
 end
 
 -- Função para iniciar/parar

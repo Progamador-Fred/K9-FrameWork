@@ -1,7 +1,8 @@
 -- Auto JJS Melhorado - Main.lua
 -- Criado por K9zzzzz
 
-return function(Options)
+-- Função principal que será executada
+local function Main(Options)
     -- Configurações padrão
     Options = Options or {}
     Options.StartNumber = Options.StartNumber or 1
@@ -13,4 +14,11 @@ return function(Options)
     -- Carregar e executar o script principal
     local script = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/UI.lua'))()
     script(Options)
+end
+
+-- Executar imediatamente se não houver argumentos
+if not script.Parent then
+    Main()
+else
+    return Main
 end 
