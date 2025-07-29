@@ -1,5 +1,7 @@
--- Auto JJS Melhorado - UI Module
+-- UI.lua
+-- Interface gráfica completa e moderna
 -- Criado por K9zzzzz
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -23,40 +25,49 @@ local UITexts = {
         title = "Auto JJS Melhorado",
         start = "Iniciar",
         stop = "Parar",
+        test = "Testar Chat",
         status = "Status:",
         counter = "Contador:",
         speed = "Velocidade:",
         language = "Idioma:",
         rainbow = "Rainbow",
-        startNumber = "Início:",
-        endNumber = "Fim:",
-        finalPrompt = "Final:"
+        chatType = "Tipo de Chat:",
+        startNumber = "Número Inicial:",
+        endNumber = "Número Final:",
+        infinite = "Infinito",
+        prompt = "Prompt Final:"
     },
     ['en-us'] = {
         title = "Auto JJS Improved",
         start = "Start",
         stop = "Stop",
+        test = "Test Chat",
         status = "Status:",
         counter = "Counter:",
         speed = "Speed:",
         language = "Language:",
         rainbow = "Rainbow",
-        startNumber = "Start:",
-        endNumber = "End:",
-        finalPrompt = "Final:"
+        chatType = "Chat Type:",
+        startNumber = "Start Number:",
+        endNumber = "End Number:",
+        infinite = "Infinite",
+        prompt = "Final Prompt:"
     },
     ['es-es'] = {
         title = "Auto JJS Mejorado",
         start = "Iniciar",
         stop = "Parar",
+        test = "Probar Chat",
         status = "Estado:",
         counter = "Contador:",
         speed = "Velocidad:",
         language = "Idioma:",
         rainbow = "Arcoíris",
-        startNumber = "Inicio:",
-        endNumber = "Fin:",
-        finalPrompt = "Final:"
+        chatType = "Tipo de Chat:",
+        startNumber = "Número Inicial:",
+        endNumber = "Número Final:",
+        infinite = "Infinito",
+        prompt = "Prompt Final:"
     }
 }
 
@@ -86,6 +97,11 @@ local function CreateButton(parent, text, size, position, callback)
     button.TextScaled = true
     button.Font = Enum.Font.GothamBold
     button.Parent = parent
+    
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = button
     
     -- Hover effect
     button.MouseEnter:Connect(function()
@@ -120,6 +136,11 @@ local function CreateInput(parent, placeholder, size, position, callback)
     input.Font = Enum.Font.Gotham
     input.Parent = parent
     
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = input
+    
     input.FocusLost:Connect(function()
         if callback then
             callback(input.Text)
@@ -141,6 +162,11 @@ local function CreateDropdown(parent, options, size, position, callback)
     dropdown.TextScaled = true
     dropdown.Font = Enum.Font.Gotham
     dropdown.Parent = parent
+    
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = dropdown
     
     local isOpen = false
     local selectedOption = options[1]
@@ -171,7 +197,7 @@ local function CreateDropdown(parent, options, size, position, callback)
                     end
                     -- Remover opções
                     for _, child in pairs(dropdown:GetChildren()) do
-                        if child ~= dropdown then
+                        if child ~= dropdown and child:IsA("TextButton") then
                             child:Destroy()
                         end
                     end
@@ -180,7 +206,7 @@ local function CreateDropdown(parent, options, size, position, callback)
         else
             -- Remover opções
             for _, child in pairs(dropdown:GetChildren()) do
-                if child ~= dropdown then
+                if child ~= dropdown and child:IsA("TextButton") then
                     child:Destroy()
                 end
             end
@@ -206,6 +232,11 @@ local function CreateCheckbox(parent, text, size, position, callback)
     checkbox.Text = ""
     checkbox.Parent = frame
     
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = checkbox
+    
     local label = CreateTextLabel(frame, text, UDim2.new(0, 80, 1, 0), UDim2.new(0, size.X.Offset + 10, 0, 0))
     
     local isChecked = false
@@ -228,13 +259,25 @@ local function CreateMainUI()
     ScreenGui.Name = "AutoJJsUI"
     ScreenGui.Parent = game:GetService("CoreGui")
     
-    -- Criar frame principal
+    -- Criar frame principal (aumentado para acomodar novos campos)
     MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 300, 0, 400)
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    MainFrame.Size = UDim2.new(0, 350, 0, 550)
+    MainFrame.Position = UDim2.new(0.5, -175, 0.5, -275)
     MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
+    
+    -- Corner radius
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = MainFrame
+    
+    -- Stroke
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Transparency = 0.8
+    stroke.Thickness = 1
+    stroke.Parent = MainFrame
     
     -- Título
     local title = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].title, UDim2.new(1, 0, 0, 40), UDim2.new(0, 0, 0, 10))
@@ -247,30 +290,55 @@ local function CreateMainUI()
     local counterLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].counter, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 90))
     local counterValue = CreateTextLabel(MainFrame, "0", UDim2.new(0.5, -10, 0, 20), UDim2.new(0.5, 0, 0, 90), Color3.fromRGB(0, 255, 0))
     
+    -- Tipo de Chat
+    local chatTypeLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].chatType, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 120))
+    local chatTypeValue = CreateTextLabel(MainFrame, "Detectando...", UDim2.new(0.5, -10, 0, 20), UDim2.new(0.5, 0, 0, 120), Color3.fromRGB(255, 255, 0))
+    
+    -- Número Inicial
+    local startNumberLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].startNumber, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 150))
+    local startNumberInput = CreateInput(MainFrame, "1", UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 150), function(value)
+        Config.StartNumber = tonumber(value) or 1
+    end)
+    startNumberInput.Text = tostring(Config.StartNumber or 1)
+    
+    -- Número Final
+    local endNumberLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].endNumber, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 190))
+    local endNumberInput = CreateInput(MainFrame, "80", UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 190), function(value)
+        Config.EndNumber = tonumber(value) or 80
+    end)
+    endNumberInput.Text = tostring(Config.EndNumber or 80)
+    
+    -- Prompt Final
+    local promptLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].prompt, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 230))
+    local promptInput = CreateInput(MainFrame, "!", UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 230), function(value)
+        Config.FinalPrompt = value or "!"
+    end)
+    promptInput.Text = Config.FinalPrompt or "!"
+    
     -- Velocidade
-    local speedLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].speed, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 120))
-    local speedInput = CreateInput(MainFrame, "2.5", UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 120), function(value)
+    local speedLabel = CreateTextLabel(MainFrame, UITexts[Config.Language.UI].speed, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 270))
+    local speedInput = CreateInput(MainFrame, "2.5", UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 270), function(value)
         Config.Tempo = tonumber(value) or 2.5
     end)
     speedInput.Text = tostring(Config.Tempo)
     
     -- Idioma UI
-    local uiLangLabel = CreateTextLabel(MainFrame, "UI " .. UITexts[Config.Language.UI].language, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 160))
-    local uiLangDropdown = CreateDropdown(MainFrame, {"pt-br", "en-us", "es-es"}, UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 160), function(value)
+    local uiLangLabel = CreateTextLabel(MainFrame, "UI " .. UITexts[Config.Language.UI].language, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 310))
+    local uiLangDropdown = CreateDropdown(MainFrame, {"pt-br", "en-us", "es-es"}, UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 310), function(value)
         Config.Language.UI = value
         UI:RefreshTexts()
     end)
     uiLangDropdown.Text = Config.Language.UI
     
     -- Idioma Números
-    local numLangLabel = CreateTextLabel(MainFrame, "Números " .. UITexts[Config.Language.UI].language, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 200))
-    local numLangDropdown = CreateDropdown(MainFrame, {"pt-br", "en-us", "es-es"}, UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 200), function(value)
+    local numLangLabel = CreateTextLabel(MainFrame, "Números " .. UITexts[Config.Language.UI].language, UDim2.new(0.5, -10, 0, 20), UDim2.new(0, 10, 0, 350))
+    local numLangDropdown = CreateDropdown(MainFrame, {"pt-br", "en-us", "es-es"}, UDim2.new(0.5, -10, 0, 25), UDim2.new(0.5, 0, 0, 350), function(value)
         Config.Language.Words = value
     end)
     numLangDropdown.Text = Config.Language.Words
     
     -- Rainbow
-    local rainbowCheckbox = CreateCheckbox(MainFrame, UITexts[Config.Language.UI].rainbow, UDim2.new(0, 20, 0, 20), UDim2.new(0, 10, 0, 240), function(checked)
+    local rainbowCheckbox = CreateCheckbox(MainFrame, UITexts[Config.Language.UI].rainbow, UDim2.new(0, 20, 0, 20), UDim2.new(0, 10, 0, 390), function(checked)
         Config.Rainbow = checked
         if checked then
             UI:StartRainbow()
@@ -280,15 +348,21 @@ local function CreateMainUI()
     end)
     
     -- Botões
-    local startButton = CreateButton(MainFrame, UITexts[Config.Language.UI].start, UDim2.new(0.45, 0, 0, 40), UDim2.new(0.025, 0, 0, 280), function()
+    local startButton = CreateButton(MainFrame, UITexts[Config.Language.UI].start, UDim2.new(0.3, 0, 0, 40), UDim2.new(0.025, 0, 0, 440), function()
         if Callbacks.Start then
             Callbacks.Start()
         end
     end)
     
-    local stopButton = CreateButton(MainFrame, UITexts[Config.Language.UI].stop, UDim2.new(0.45, 0, 0, 40), UDim2.new(0.525, 0, 0, 280), function()
+    local stopButton = CreateButton(MainFrame, UITexts[Config.Language.UI].stop, UDim2.new(0.3, 0, 0, 40), UDim2.new(0.35, 0, 0, 440), function()
         if Callbacks.Stop then
             Callbacks.Stop()
+        end
+    end)
+    
+    local testButton = CreateButton(MainFrame, UITexts[Config.Language.UI].test, UDim2.new(0.3, 0, 0, 40), UDim2.new(0.675, 0, 0, 440), function()
+        if Callbacks.Test then
+            Callbacks.Test()
         end
     end)
     
@@ -296,12 +370,17 @@ local function CreateMainUI()
     UI.Elements = {
         statusValue = statusValue,
         counterValue = counterValue,
+        chatTypeValue = chatTypeValue,
+        startNumberInput = startNumberInput,
+        endNumberInput = endNumberInput,
+        promptInput = promptInput,
         speedInput = speedInput,
         uiLangDropdown = uiLangDropdown,
         numLangDropdown = numLangDropdown,
         rainbowCheckbox = rainbowCheckbox,
         startButton = startButton,
-        stopButton = stopButton
+        stopButton = stopButton,
+        testButton = testButton
     }
     
     -- Tornar draggable
@@ -388,6 +467,13 @@ function UI:UpdateCounter(number)
     end
 end
 
+-- Função para atualizar tipo de chat
+function UI:UpdateChatType(chatType)
+    if UI.Elements and UI.Elements.chatTypeValue then
+        UI.Elements.chatTypeValue.Text = chatType
+    end
+end
+
 -- Função para mostrar/esconder UI
 function UI:SetVisible(visible)
     if ScreenGui then
@@ -408,11 +494,18 @@ function UI:SetToggleCallback(callback)
     Callbacks.Toggle = callback
 end
 
+function UI:SetTestCallback(callback)
+    Callbacks.Test = callback
+end
+
 -- Função para atualizar configurações
 function UI:UpdateConfig(newConfig)
     Config = newConfig
     if UI.Elements then
         UI.Elements.speedInput.Text = tostring(Config.Tempo)
+        UI.Elements.startNumberInput.Text = tostring(Config.StartNumber or 1)
+        UI.Elements.endNumberInput.Text = tostring(Config.EndNumber or 80)
+        UI.Elements.promptInput.Text = Config.FinalPrompt or "!"
         UI.Elements.uiLangDropdown.Text = Config.Language.UI
         UI.Elements.numLangDropdown.Text = Config.Language.Words
     end
