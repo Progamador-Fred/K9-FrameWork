@@ -1,4 +1,4 @@
--- UI.lua - Interface moderna e rainbow
+-- UI.lua - Interface minimalista
 -- Criado por K9zzzzz
 
 local Players = game:GetService("Players")
@@ -7,7 +7,6 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
-
 local ScreenGui, MainFrame, IsRunning, CurrentNumber, Config, Modules, I18N = nil, nil, false, 1, {}, {}, {}
 
 -- Importar módulos
@@ -34,7 +33,7 @@ local function ImportModules()
         return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Request.lua'))()
     end)
     
-    -- Importar Notification (da pasta principal)
+    -- Importar Notification
     local success5, notif = pcall(function()
         return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Notification.lua'))()
     end)
@@ -67,14 +66,8 @@ local function ImportI18N(language)
     end
 end
 
--- Rainbow effect
-local function RainbowColor(t)
-    local h = (tick() * 0.25 + t) % 1
-    return Color3.fromHSV(h, 0.8, 1)
-end
-
--- Função para criar texto estilizado
-local function CreateText(parent, text, size, position, color, bold)
+-- Função para criar texto
+local function CreateText(parent, text, size, position, color)
     local label = Instance.new("TextLabel")
     label.Size = size
     label.Position = position
@@ -82,7 +75,7 @@ local function CreateText(parent, text, size, position, color, bold)
     label.Text = text
     label.TextColor3 = color or Color3.fromRGB(255, 255, 255)
     label.TextScaled = true
-    label.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+    label.Font = Enum.Font.Gotham
     label.Parent = parent
     return label
 end
@@ -92,7 +85,7 @@ local function CreateInput(parent, placeholder, size, position, callback)
     local input = Instance.new("TextBox")
     input.Size = size
     input.Position = position
-    input.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     input.BorderSizePixel = 0
     input.PlaceholderText = placeholder
     input.Text = ""
@@ -102,54 +95,75 @@ local function CreateInput(parent, placeholder, size, position, callback)
     input.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim2.new(0, 16)
+    corner.CornerRadius = UDim2.new(0, 8)
     corner.Parent = input
     
-    input.Focused:Connect(function()
-        TweenService:Create(input, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-    end)
-    
     input.FocusLost:Connect(function()
-        TweenService:Create(input, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}):Play()
         if callback then callback(input.Text) end
     end)
     
     return input
 end
 
--- Função para criar botão rainbow arredondado
-local function CreateRainbowButton(parent, text, size, position, callback)
+-- Função para criar toggle
+local function CreateToggle(parent, size, position, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = size
+    toggleFrame.Position = position
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim2.new(0, 10)
+    corner.Parent = toggleFrame
+    
+    local toggleButton = Instance.new("Frame")
+    toggleButton.Size = UDim2.new(0.4, 0, 0.8, 0)
+    toggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Parent = toggleFrame
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim2.new(0, 8)
+    buttonCorner.Parent = toggleButton
+    
+    local isToggled = false
+    
+    toggleFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isToggled = not isToggled
+            
+            local targetPosition = isToggled and UDim2.new(0.55, 0, 0.1, 0) or UDim2.new(0.05, 0, 0.1, 0)
+            local targetColor = isToggled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
+            
+            TweenService:Create(toggleButton, TweenInfo.new(0.2), {Position = targetPosition}):Play()
+            TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+            
+            if callback then callback(isToggled) end
+        end
+    end)
+    
+    return toggleFrame
+end
+
+-- Função para criar botão play
+local function CreatePlayButton(parent, size, position, callback)
     local button = Instance.new("TextButton")
     button.Size = size
     button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     button.BorderSizePixel = 0
-    button.Text = text
+    button.Text = "▶"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextScaled = true
     button.Font = Enum.Font.GothamBold
     button.Parent = parent
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim2.new(0, 16)
+    corner.CornerRadius = UDim2.new(0, 8)
     corner.Parent = button
-    
-    local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 2
-    stroke.Parent = button
-    
-    -- Rainbow animation
-    RunService.RenderStepped:Connect(function()
-        stroke.Color = RainbowColor(0.1)
-    end)
-    
-    button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-    end)
-    
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}):Play()
-    end)
     
     button.MouseButton1Click:Connect(function()
         if callback then callback() end
@@ -158,7 +172,7 @@ local function CreateRainbowButton(parent, text, size, position, callback)
     return button
 end
 
--- Função para tornar frame draggable (PC e Mobile)
+-- Função para tornar frame draggable
 local function MakeDraggable(frame)
     local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
     
@@ -203,66 +217,61 @@ local function SendMessage(numero)
     return Modules.RemoteChat:SendMessage(message)
 end
 
--- Função para criar a UI moderna e rainbow
+-- Função para criar a UI
 local function CreateUI()
     ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AutoJJsUI"
     ScreenGui.Parent = game:GetService("CoreGui")
     
-    -- Frame ocupa 1/8 largura e 1/2 altura, centralizado
+    -- Frame principal (compacto)
     MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0.125, 0, 0.5, 0)
-    MainFrame.Position = UDim2.new(0.4375, 0, 0.25, 0)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    MainFrame.Size = UDim2.new(0, 200, 0, 280)
+    MainFrame.Position = UDim2.new(0.5, -100, 0.5, -140)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim2.new(0, 24)
+    corner.CornerRadius = UDim2.new(0, 12)
     corner.Parent = MainFrame
     
-    local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 3
-    stroke.Parent = MainFrame
-    
-    -- Rainbow border animation
-    RunService.RenderStepped:Connect(function()
-        stroke.Color = RainbowColor(0)
-    end)
-    
-    -- Título rainbow
-    local title = CreateText(MainFrame, "K9zzzzz - Auto JJs v2.1", UDim2.new(1, 0, 0, 40), UDim2.new(0, 0, 0, 0), Color3.fromRGB(255,255,255), true)
-    RunService.RenderStepped:Connect(function()
-        title.TextColor3 = RainbowColor(0.2)
-    end)
+    -- Título
+    local title = CreateText(MainFrame, "K9zzzzz - Auto JJs v1.0.0", UDim2.new(1, 0, 0, 30), UDim2.new(0, 0, 0, 5), Color3.fromRGB(255, 255, 255))
+    title.Font = Enum.Font.GothamBold
     
     -- Começar do
-    local startLabel = CreateText(MainFrame, I18N.UI.StartFrom or "Começar do", UDim2.new(0.8, 0, 0, 28), UDim2.new(0.1, 0, 0, 60))
-    local startInput = CreateInput(MainFrame, "1", UDim2.new(0.8, 0, 0, 32), UDim2.new(0.1, 0, 0, 90), function(value)
+    local startLabel = CreateText(MainFrame, "Começar do:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 40))
+    local startInput = CreateInput(MainFrame, "1", UDim2.new(0.5, 0, 0, 25), UDim2.new(0.45, 0, 0, 40), function(value)
         Config.StartNumber = tonumber(value) or 1
     end)
     startInput.Text = tostring(Config.StartNumber or 1)
     
     -- Até o
-    local endLabel = CreateText(MainFrame, I18N.UI.Until or "Até o", UDim2.new(0.8, 0, 0, 28), UDim2.new(0.1, 0, 0, 140))
-    local endInput = CreateInput(MainFrame, "10", UDim2.new(0.8, 0, 0, 32), UDim2.new(0.1, 0, 0, 170), function(value)
+    local endLabel = CreateText(MainFrame, "Até o:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 75))
+    local endInput = CreateInput(MainFrame, "10", UDim2.new(0.5, 0, 0, 25), UDim2.new(0.45, 0, 0, 75), function(value)
         Config.EndNumber = tonumber(value) or 10
     end)
     endInput.Text = tostring(Config.EndNumber or 10)
     
     -- Final do Prefix
-    local prefixLabel = CreateText(MainFrame, I18N.UI.FinalPrefix or "Final do Prefix", UDim2.new(0.8, 0, 0, 28), UDim2.new(0.1, 0, 0, 220))
-    local prefixInput = CreateInput(MainFrame, "!", UDim2.new(0.8, 0, 0, 32), UDim2.new(0.1, 0, 0, 250), function(value)
+    local prefixLabel = CreateText(MainFrame, "Final do Prefix:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 110))
+    local prefixInput = CreateInput(MainFrame, "!", UDim2.new(0.5, 0, 0, 25), UDim2.new(0.45, 0, 0, 110), function(value)
         Config.FinalPrompt = value or "!"
     end)
     prefixInput.Text = Config.FinalPrompt or "!"
     
-    -- Botão de pular rainbow
-    local playButton = CreateRainbowButton(MainFrame, I18N.UI.StartButton or "▶ PULAR", UDim2.new(0.8, 0, 0, 44), UDim2.new(0.1, 0, 0, 310), function()
+    -- Pular toggle
+    local skipLabel = CreateText(MainFrame, "Pular:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 145))
+    local skipToggle = CreateToggle(MainFrame, UDim2.new(0.5, 0, 0, 20), UDim2.new(0.45, 0, 0, 145), function(toggled)
+        Config.Skip = toggled
+    end)
+    
+    -- Botão play
+    local playButton = CreatePlayButton(MainFrame, UDim2.new(0.9, 0, 0, 50), UDim2.new(0.05, 0, 0, 180), function()
         ToggleAutoJJs()
     end)
     
-    -- Tornar draggable (PC e Mobile)
+    -- Tornar draggable
     MakeDraggable(MainFrame)
     
     -- Notificação de carregamento
@@ -270,8 +279,6 @@ local function CreateUI()
         Modules.Notification:ShowI18N(I18N, "Loaded", 3)
     end
 end
-
-
 
 -- Função para iniciar/parar
 local function ToggleAutoJJs()
@@ -335,9 +342,8 @@ local function Main(Options)
             -- Criar UI
             CreateUI()
             
-            print("Auto JJS v2.1 carregado!")
+            print("Auto JJS v1.0.0 carregado!")
             print("Criado por K9zzzzz")
-            print("Gambiarra do Extenso ativa - qualquer número!")
         else
             warn("Erro ao importar módulos!")
         end
