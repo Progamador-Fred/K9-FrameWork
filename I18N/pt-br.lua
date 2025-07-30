@@ -8,6 +8,7 @@ local I18N = {
         StartFrom = "Começar do",
         Until = "Até o",
         FinalPrefix = "Final do Prefix",
+        Skip = "Pular",
         StartButton = "▶ PULAR"
     },
     

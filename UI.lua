@@ -1,256 +1,59 @@
--- UI.lua - Interface minimalista
+-- UI.lua - Interface básica
 -- Criado por K9zzzzz
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
 local ScreenGui, MainFrame, IsRunning, CurrentNumber, Config, Modules, I18N = nil, nil, false, 1, {}, {}, {}
-
--- Função para carregar com retry
-local function LoadWithRetry(url, maxRetries)
-    maxRetries = maxRetries or 3
-    
-    for attempt = 1, maxRetries do
-        local success, result = pcall(function()
-            return game:HttpGet(url, true)
-        end)
-        
-        if success then
-            return result
-        else
-            if attempt < maxRetries then
-                wait(2) -- Esperar 2 segundos antes de tentar novamente
-            end
-        end
-    end
-    
-    return nil
-end
-
--- Função para carregar módulo com retry
-local function LoadModule(url, maxRetries)
-    maxRetries = maxRetries or 3
-    
-    for attempt = 1, maxRetries do
-        local success, result = pcall(function()
-            local content = LoadWithRetry(url)
-            if content then
-                return loadstring(content)()
-            end
-            return nil
-        end)
-        
-        if success and result then
-            return result
-        else
-            if attempt < maxRetries then
-                wait(2)
-            end
-        end
-    end
-    
-    return nil
-end
 
 -- Importar módulos
 local function ImportModules()
     local modules = {}
     
-    -- URLs dos módulos
-    local moduleUrls = {
-        Character = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Character.lua',
-        Extenso = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Extenso.lua',
-        RemoteChat = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/RemoteChat.lua',
-        Request = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Request.lua',
-        Notification = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Notification.lua'
-    }
+    -- Carregar módulos essenciais
+    local success1, ext = pcall(function()
+        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Extenso.lua'))()
+    end)
     
-    -- Carregar cada módulo
-    for name, url in pairs(moduleUrls) do
-        local module = LoadModule(url)
-        if module then
-            modules[name] = module
-            print("✓ Módulo " .. name .. " carregado com sucesso")
-        else
-            warn("✗ Falha ao carregar módulo " .. name)
-        end
-    end
+    local success2, chat = pcall(function()
+        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/RemoteChat.lua'))()
+    end)
+    
+    local success3, notif = pcall(function()
+        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Notification.lua'))()
+    end)
+    
+    if success1 then modules.Extenso = ext end
+    if success2 then modules.RemoteChat = chat end
+    if success3 then modules.Notification = notif end
     
     Modules = modules
-    return modules.Extenso and modules.RemoteChat -- Extenso e RemoteChat são essenciais
+    return success1 and success2
 end
 
 -- Importar I18N
 local function ImportI18N(language)
-    local url = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/' .. language .. '.lua'
+    local success, translations = pcall(function()
+        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/' .. language .. '.lua'))()
+    end)
     
-    local translations = LoadModule(url)
-    if translations then
+    if success then
         I18N = translations
-        print("✓ I18N " .. language .. " carregado com sucesso")
         return true
     else
-        -- Fallback para pt-br
-        local fallbackUrl = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/pt-br.lua'
-        local fallback = LoadModule(fallbackUrl)
-        if fallback then
-            I18N = fallback
-            print("✓ I18N pt-br (fallback) carregado com sucesso")
-            return true
-        else
-            warn("✗ Falha ao carregar I18N")
-            return false
-        end
+        -- Fallback pt-br
+        local fallback = pcall(function()
+            I18N = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/pt-br.lua'))()
+        end)
+        return fallback
     end
 end
 
--- Função para criar texto
-local function CreateText(parent, text, size, position, color)
-    local label = Instance.new("TextLabel")
-    label.Size = size
-    label.Position = position
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = color or Color3.fromRGB(255, 255, 255)
-    label.TextScaled = true
-    label.Font = Enum.Font.Gotham
-    label.Parent = parent
-    return label
-end
-
--- Função para criar input arredondado
-local function CreateInput(parent, placeholder, size, position, callback)
-    local input = Instance.new("TextBox")
-    input.Size = size
-    input.Position = position
-    input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    input.BorderSizePixel = 0
-    input.PlaceholderText = placeholder
-    input.Text = ""
-    input.TextColor3 = Color3.fromRGB(255, 255, 255)
-    input.TextScaled = true
-    input.Font = Enum.Font.Gotham
-    input.Parent = parent
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim2.new(0, 8)
-    corner.Parent = input
-    
-    input.FocusLost:Connect(function()
-        if callback then callback(input.Text) end
-    end)
-    
-    return input
-end
-
--- Função para criar toggle
-local function CreateToggle(parent, size, position, callback)
-    local toggleFrame = Instance.new("Frame")
-    toggleFrame.Size = size
-    toggleFrame.Position = position
-    toggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    toggleFrame.BorderSizePixel = 0
-    toggleFrame.Parent = parent
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim2.new(0, 10)
-    corner.Parent = toggleFrame
-    
-    local toggleButton = Instance.new("Frame")
-    toggleButton.Size = UDim2.new(0.4, 0, 0.8, 0)
-    toggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-    toggleButton.BorderSizePixel = 0
-    toggleButton.Parent = toggleFrame
-    
-    local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim2.new(0, 8)
-    buttonCorner.Parent = toggleButton
-    
-    local isToggled = false
-    
-    toggleFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isToggled = not isToggled
-            
-            local targetPosition = isToggled and UDim2.new(0.55, 0, 0.1, 0) or UDim2.new(0.05, 0, 0.1, 0)
-            local targetColor = isToggled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
-            
-            TweenService:Create(toggleButton, TweenInfo.new(0.2), {Position = targetPosition}):Play()
-            TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
-            
-            if callback then callback(isToggled) end
-        end
-    end)
-    
-    return toggleFrame
-end
-
--- Função para criar botão play
-local function CreatePlayButton(parent, size, position, callback)
-    local button = Instance.new("TextButton")
-    button.Size = size
-    button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    button.BorderSizePixel = 0
-    button.Text = "▶"
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextScaled = true
-    button.Font = Enum.Font.GothamBold
-    button.Parent = parent
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim2.new(0, 8)
-    corner.Parent = button
-    
-    button.MouseButton1Click:Connect(function()
-        if callback then callback() end
-    end)
-    
-    return button
-end
-
--- Função para tornar frame draggable
-local function MakeDraggable(frame)
-    local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
-    
-    local function update(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-    
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-    
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then update(input) end
-    end)
-end
-
--- Função para enviar mensagem usando módulos
+-- Função para enviar mensagem
 local function SendMessage(numero)
-    if not Modules.Extenso or not Modules.RemoteChat then 
-        warn("Módulos não importados!") 
-        return false 
-    end
+    if not Modules.Extenso or not Modules.RemoteChat then return false end
     
     local numeroExtenso = Modules.Extenso:GetNumero(numero)
     local message = numeroExtenso .. (Config.FinalPrompt or "!")
@@ -258,13 +61,13 @@ local function SendMessage(numero)
     return Modules.RemoteChat:SendMessage(message)
 end
 
--- Função para criar a UI
+-- Função para criar UI
 local function CreateUI()
     ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AutoJJsUI"
     ScreenGui.Parent = game:GetService("CoreGui")
     
-    -- Frame principal (compacto)
+    -- Frame principal
     MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 200, 0, 280)
     MainFrame.Position = UDim2.new(0.5, -100, 0.5, -140)
@@ -277,43 +80,241 @@ local function CreateUI()
     corner.Parent = MainFrame
     
     -- Título
-    local title = CreateText(MainFrame, "K9zzzzz - Auto JJs v1.0.0", UDim2.new(1, 0, 0, 30), UDim2.new(0, 0, 0, 5), Color3.fromRGB(255, 255, 255))
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Position = UDim2.new(0, 0, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "K9zzzzz - Auto JJs v1.0.0"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextScaled = true
     title.Font = Enum.Font.GothamBold
+    title.Parent = MainFrame
     
     -- Começar do
-    local startLabel = CreateText(MainFrame, "Começar do:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 40))
-    local startInput = CreateInput(MainFrame, "1", UDim2.new(0.5, 0, 0, 25), UDim2.new(0.45, 0, 0, 40), function(value)
-        Config.StartNumber = tonumber(value) or 1
+    local startLabel = Instance.new("TextLabel")
+    startLabel.Size = UDim2.new(0.4, 0, 0, 20)
+    startLabel.Position = UDim2.new(0.05, 0, 0, 40)
+    startLabel.BackgroundTransparency = 1
+    startLabel.Text = I18N.UI.StartFrom or "Começar do:"
+    startLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    startLabel.TextScaled = true
+    startLabel.Font = Enum.Font.Gotham
+    startLabel.Parent = MainFrame
+    
+    local startInput = Instance.new("TextBox")
+    startInput.Size = UDim2.new(0.5, 0, 0, 25)
+    startInput.Position = UDim2.new(0.45, 0, 0, 40)
+    startInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    startInput.BorderSizePixel = 0
+    startInput.Text = "1"
+    startInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    startInput.TextScaled = true
+    startInput.Font = Enum.Font.Gotham
+    startInput.Parent = MainFrame
+    
+    local startCorner = Instance.new("UICorner")
+    startCorner.CornerRadius = UDim2.new(0, 8)
+    startCorner.Parent = startInput
+    
+    startInput.FocusLost:Connect(function()
+        Config.StartNumber = tonumber(startInput.Text) or 1
     end)
-    startInput.Text = tostring(Config.StartNumber or 1)
     
     -- Até o
-    local endLabel = CreateText(MainFrame, "Até o:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 75))
-    local endInput = CreateInput(MainFrame, "10", UDim2.new(0.5, 0, 0, 25), UDim2.new(0.45, 0, 0, 75), function(value)
-        Config.EndNumber = tonumber(value) or 10
+    local endLabel = Instance.new("TextLabel")
+    endLabel.Size = UDim2.new(0.4, 0, 0, 20)
+    endLabel.Position = UDim2.new(0.05, 0, 0, 75)
+    endLabel.BackgroundTransparency = 1
+    endLabel.Text = I18N.UI.Until or "Até o:"
+    endLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    endLabel.TextScaled = true
+    endLabel.Font = Enum.Font.Gotham
+    endLabel.Parent = MainFrame
+    
+    local endInput = Instance.new("TextBox")
+    endInput.Size = UDim2.new(0.5, 0, 0, 25)
+    endInput.Position = UDim2.new(0.45, 0, 0, 75)
+    endInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    endInput.BorderSizePixel = 0
+    endInput.Text = "10"
+    endInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    endInput.TextScaled = true
+    endInput.Font = Enum.Font.Gotham
+    endInput.Parent = MainFrame
+    
+    local endCorner = Instance.new("UICorner")
+    endCorner.CornerRadius = UDim2.new(0, 8)
+    endCorner.Parent = endInput
+    
+    endInput.FocusLost:Connect(function()
+        Config.EndNumber = tonumber(endInput.Text) or 10
     end)
-    endInput.Text = tostring(Config.EndNumber or 10)
     
     -- Final do Prefix
-    local prefixLabel = CreateText(MainFrame, "Final do Prefix:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 110))
-    local prefixInput = CreateInput(MainFrame, "!", UDim2.new(0.5, 0, 0, 25), UDim2.new(0.45, 0, 0, 110), function(value)
-        Config.FinalPrompt = value or "!"
+    local prefixLabel = Instance.new("TextLabel")
+    prefixLabel.Size = UDim2.new(0.4, 0, 0, 20)
+    prefixLabel.Position = UDim2.new(0.05, 0, 0, 110)
+    prefixLabel.BackgroundTransparency = 1
+    prefixLabel.Text = I18N.UI.FinalPrefix or "Final do Prefix:"
+    prefixLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    prefixLabel.TextScaled = true
+    prefixLabel.Font = Enum.Font.Gotham
+    prefixLabel.Parent = MainFrame
+    
+    local prefixInput = Instance.new("TextBox")
+    prefixInput.Size = UDim2.new(0.5, 0, 0, 25)
+    prefixInput.Position = UDim2.new(0.45, 0, 0, 110)
+    prefixInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    prefixInput.BorderSizePixel = 0
+    prefixInput.Text = "!"
+    prefixInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+    prefixInput.TextScaled = true
+    prefixInput.Font = Enum.Font.Gotham
+    prefixInput.Parent = MainFrame
+    
+    local prefixCorner = Instance.new("UICorner")
+    prefixCorner.CornerRadius = UDim2.new(0, 8)
+    prefixCorner.Parent = prefixInput
+    
+    prefixInput.FocusLost:Connect(function()
+        Config.FinalPrompt = prefixInput.Text or "!"
     end)
-    prefixInput.Text = Config.FinalPrompt or "!"
     
     -- Pular toggle
-    local skipLabel = CreateText(MainFrame, "Pular:", UDim2.new(0.4, 0, 0, 20), UDim2.new(0.05, 0, 0, 145))
-    local skipToggle = CreateToggle(MainFrame, UDim2.new(0.5, 0, 0, 20), UDim2.new(0.45, 0, 0, 145), function(toggled)
-        Config.Skip = toggled
+    local skipLabel = Instance.new("TextLabel")
+    skipLabel.Size = UDim2.new(0.4, 0, 0, 20)
+    skipLabel.Position = UDim2.new(0.05, 0, 0, 145)
+    skipLabel.BackgroundTransparency = 1
+    skipLabel.Text = I18N.UI.Skip or "Pular:"
+    skipLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    skipLabel.TextScaled = true
+    skipLabel.Font = Enum.Font.Gotham
+    skipLabel.Parent = MainFrame
+    
+    local skipToggle = Instance.new("TextButton")
+    skipToggle.Size = UDim2.new(0.5, 0, 0, 20)
+    skipToggle.Position = UDim2.new(0.45, 0, 0, 145)
+    skipToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    skipToggle.BorderSizePixel = 0
+    skipToggle.Text = ""
+    skipToggle.Parent = MainFrame
+    
+    local skipCorner = Instance.new("UICorner")
+    skipCorner.CornerRadius = UDim2.new(0, 10)
+    skipCorner.Parent = skipToggle
+    
+    local skipButton = Instance.new("Frame")
+    skipButton.Size = UDim2.new(0.4, 0, 0.8, 0)
+    skipButton.Position = UDim2.new(0.05, 0, 0.1, 0)
+    skipButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    skipButton.BorderSizePixel = 0
+    skipButton.Parent = skipToggle
+    
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim2.new(0, 8)
+    buttonCorner.Parent = skipButton
+    
+    local isToggled = false
+    skipToggle.MouseButton1Click:Connect(function()
+        isToggled = not isToggled
+        local targetPosition = isToggled and UDim2.new(0.55, 0, 0.1, 0) or UDim2.new(0.05, 0, 0.1, 0)
+        local targetColor = isToggled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(80, 80, 80)
+        
+        TweenService:Create(skipButton, TweenInfo.new(0.2), {Position = targetPosition}):Play()
+        TweenService:Create(skipButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+        
+        Config.Skip = isToggled
     end)
     
     -- Botão play
-    local playButton = CreatePlayButton(MainFrame, UDim2.new(0.9, 0, 0, 50), UDim2.new(0.05, 0, 0, 180), function()
-        ToggleAutoJJs()
+    local playButton = Instance.new("TextButton")
+    playButton.Size = UDim2.new(0.9, 0, 0, 50)
+    playButton.Position = UDim2.new(0.05, 0, 0, 180)
+    playButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    playButton.BorderSizePixel = 0
+    playButton.Text = "▶"
+    playButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playButton.TextScaled = true
+    playButton.Font = Enum.Font.GothamBold
+    playButton.Parent = MainFrame
+    
+    local playCorner = Instance.new("UICorner")
+    playCorner.CornerRadius = UDim2.new(0, 8)
+    playCorner.Parent = playButton
+    
+    -- Draggable
+    local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
     end)
     
-    -- Tornar draggable
-    MakeDraggable(MainFrame)
+    MainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then update(input) end
+    end)
+    
+    -- Função para iniciar/parar
+    local function ToggleAutoJJs()
+        if IsRunning then
+            IsRunning = false
+            if Modules.Notification then
+                Modules.Notification:ShowI18N(I18N, "Stopped", 2)
+            end
+            return
+        end
+        
+        IsRunning = true
+        CurrentNumber = Config.StartNumber or 1
+        local endNumber = Config.EndNumber or 10
+        
+        if Modules.Notification then
+            Modules.Notification:ShowI18NWithVars(I18N, "Started", {start = CurrentNumber, end = endNumber}, 3)
+        end
+        
+        spawn(function()
+            while IsRunning and CurrentNumber <= endNumber do
+                if SendMessage(CurrentNumber) then
+                    CurrentNumber = CurrentNumber + 1
+                    
+                    if CurrentNumber % 10 == 0 and Modules.Notification then
+                        Modules.Notification:ShowI18NWithVars(I18N, "Progress", {current = CurrentNumber - 1}, 1)
+                    end
+                else
+                    if Modules.Notification then
+                        Modules.Notification:ShowI18N(I18N, "Error", 3)
+                    end
+                    break
+                end
+                
+                wait(Config.Tempo or 2.5)
+            end
+            
+            IsRunning = false
+            if Modules.Notification then
+                Modules.Notification:ShowI18N(I18N, "Completed", 3)
+            end
+        end)
+    end
+    
+    playButton.MouseButton1Click:Connect(ToggleAutoJJs)
     
     -- Notificação de carregamento
     if Modules.Notification then
@@ -321,75 +322,21 @@ local function CreateUI()
     end
 end
 
--- Função para iniciar/parar
-local function ToggleAutoJJs()
-    if IsRunning then
-        IsRunning = false
-        if Modules.Notification then
-            Modules.Notification:ShowI18N(I18N, "Stopped", 2)
-        end
-        return
-    end
-    
-    IsRunning = true
-    CurrentNumber = Config.StartNumber or 1
-    local endNumber = Config.EndNumber or 10
-    
-    if Modules.Notification then
-        Modules.Notification:ShowI18NWithVars(I18N, "Started", {start = CurrentNumber, end = endNumber}, 3)
-    end
-    
-    spawn(function()
-        while IsRunning and CurrentNumber <= endNumber do
-            if SendMessage(CurrentNumber) then
-                CurrentNumber = CurrentNumber + 1
-                
-                -- Mostrar progresso a cada 10 números
-                if CurrentNumber % 10 == 0 and Modules.Notification then
-                    Modules.Notification:ShowI18NWithVars(I18N, "Progress", {current = CurrentNumber - 1}, 1)
-                end
-            else
-                if Modules.Notification then
-                    Modules.Notification:ShowI18N(I18N, "Error", 3)
-                end
-                break
-            end
-            
-            wait(Config.Tempo or 2.5)
-        end
-        
-        IsRunning = false
-        if Modules.Notification then
-            Modules.Notification:ShowI18N(I18N, "Completed", 3)
-        end
-    end)
-end
-
 -- Função principal
 local function Main(Options)
     Config = Options or {}
-    
-    -- Configurações padrão
+    Config.StartNumber = 1
+    Config.EndNumber = 10
+    Config.FinalPrompt = "!"
     Config.Tempo = Config.Tempo or 2.5
     Config.Language = Config.Language or "pt-br"
     
-    print("🔄 Carregando Auto JJS v1.0.0...")
-    print("📡 Conectando aos módulos...")
-    
-    -- Importar I18N primeiro
-    if ImportI18N(Config.Language) then
-        -- Importar módulos
-        if ImportModules() then
-            -- Criar UI
-            CreateUI()
-            
-            print("✅ Auto JJS v1.0.0 carregado com sucesso!")
-            print("👨‍💻 Criado por K9zzzzz")
-        else
-            warn("❌ Erro ao importar módulos!")
-        end
+    if ImportI18N(Config.Language) and ImportModules() then
+        CreateUI()
+        print("Auto JJS v1.0.0 carregado!")
+        print("Criado por K9zzzzz")
     else
-        warn("❌ Erro ao importar I18N!")
+        warn("Erro ao carregar módulos!")
     end
 end
 

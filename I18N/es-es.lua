@@ -6,6 +6,7 @@ local I18N = {
     -- Interfaz de usuario
     UI = {
         StartFrom = "Comenzar desde",
+        Skip = "Saltar
         Until = "Hasta",
         FinalPrefix = "Prefijo Final",
         StartButton = "▶ SALTAR"
