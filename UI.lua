@@ -9,60 +9,101 @@ local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 local ScreenGui, MainFrame, IsRunning, CurrentNumber, Config, Modules, I18N = nil, nil, false, 1, {}, {}, {}
 
+-- Função para carregar com retry
+local function LoadWithRetry(url, maxRetries)
+    maxRetries = maxRetries or 3
+    
+    for attempt = 1, maxRetries do
+        local success, result = pcall(function()
+            return game:HttpGet(url, true)
+        end)
+        
+        if success then
+            return result
+        else
+            if attempt < maxRetries then
+                wait(2) -- Esperar 2 segundos antes de tentar novamente
+            end
+        end
+    end
+    
+    return nil
+end
+
+-- Função para carregar módulo com retry
+local function LoadModule(url, maxRetries)
+    maxRetries = maxRetries or 3
+    
+    for attempt = 1, maxRetries do
+        local success, result = pcall(function()
+            local content = LoadWithRetry(url)
+            if content then
+                return loadstring(content)()
+            end
+            return nil
+        end)
+        
+        if success and result then
+            return result
+        else
+            if attempt < maxRetries then
+                wait(2)
+            end
+        end
+    end
+    
+    return nil
+end
+
 -- Importar módulos
 local function ImportModules()
     local modules = {}
     
-    -- Importar Character
-    local success1, char = pcall(function()
-        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Character.lua'))()
-    end)
+    -- URLs dos módulos
+    local moduleUrls = {
+        Character = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Character.lua',
+        Extenso = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Extenso.lua',
+        RemoteChat = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/RemoteChat.lua',
+        Request = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Request.lua',
+        Notification = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Notification.lua'
+    }
     
-    -- Importar Extenso
-    local success2, ext = pcall(function()
-        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Extenso.lua'))()
-    end)
-    
-    -- Importar RemoteChat
-    local success3, chat = pcall(function()
-        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/RemoteChat.lua'))()
-    end)
-    
-    -- Importar Request
-    local success4, req = pcall(function()
-        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/Request.lua'))()
-    end)
-    
-    -- Importar Notification
-    local success5, notif = pcall(function()
-        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Notification.lua'))()
-    end)
-    
-    if success1 then modules.Character = char end
-    if success2 then modules.Extenso = ext end
-    if success3 then modules.RemoteChat = chat end
-    if success4 then modules.Request = req end
-    if success5 then modules.Notification = notif end
+    -- Carregar cada módulo
+    for name, url in pairs(moduleUrls) do
+        local module = LoadModule(url)
+        if module then
+            modules[name] = module
+            print("✓ Módulo " .. name .. " carregado com sucesso")
+        else
+            warn("✗ Falha ao carregar módulo " .. name)
+        end
+    end
     
     Modules = modules
-    return success2 and success3 -- Extenso e RemoteChat são essenciais
+    return modules.Extenso and modules.RemoteChat -- Extenso e RemoteChat são essenciais
 end
 
 -- Importar I18N
 local function ImportI18N(language)
-    local success, translations = pcall(function()
-        return loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/' .. language .. '.lua'))()
-    end)
+    local url = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/' .. language .. '.lua'
     
-    if success then
+    local translations = LoadModule(url)
+    if translations then
         I18N = translations
+        print("✓ I18N " .. language .. " carregado com sucesso")
         return true
     else
         -- Fallback para pt-br
-        local fallback = pcall(function()
-            I18N = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/pt-br.lua'))()
-        end)
-        return fallback
+        local fallbackUrl = 'https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/I18N/pt-br.lua'
+        local fallback = LoadModule(fallbackUrl)
+        if fallback then
+            I18N = fallback
+            print("✓ I18N pt-br (fallback) carregado com sucesso")
+            return true
+        else
+            warn("✗ Falha ao carregar I18N")
+            return false
+        end
     end
 end
 
@@ -329,11 +370,11 @@ local function Main(Options)
     Config = Options or {}
     
     -- Configurações padrão
-    Config.StartNumber = 1
-    Config.EndNumber = 10
-    Config.FinalPrompt = "!"
     Config.Tempo = Config.Tempo or 2.5
     Config.Language = Config.Language or "pt-br"
+    
+    print("🔄 Carregando Auto JJS v1.0.0...")
+    print("📡 Conectando aos módulos...")
     
     -- Importar I18N primeiro
     if ImportI18N(Config.Language) then
@@ -342,13 +383,13 @@ local function Main(Options)
             -- Criar UI
             CreateUI()
             
-            print("Auto JJS v1.0.0 carregado!")
-            print("Criado por K9zzzzz")
+            print("✅ Auto JJS v1.0.0 carregado com sucesso!")
+            print("👨‍💻 Criado por K9zzzzz")
         else
-            warn("Erro ao importar módulos!")
+            warn("❌ Erro ao importar módulos!")
         end
     else
-        warn("Erro ao importar I18N!")
+        warn("❌ Erro ao importar I18N!")
     end
 end
 
