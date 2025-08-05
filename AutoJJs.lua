@@ -1,14 +1,9 @@
--- Auto JJs - Carregador Principal
+-- Auto JJs - Script Completo
 -- Criado por: k9zzzzzz
 -- Uso exclusivo para testes internos
 
 -- Carregando Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
--- Carregando sistemas modulares
-local NumberConverter = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/numberConverter.lua'))()
-local ChatSystem = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/chatSystem.lua'))()
-local JumpSystem = loadstring(game:HttpGet('https://raw.githubusercontent.com/Progamador-Fred/K9-FrameWork/main/Modules/jumpSystem.lua'))()
 
 -- Variáveis globais
 local isRunning = false
@@ -19,6 +14,132 @@ local endNumber = 0
 local finalPrompt = ""
 local speed = 1
 local shouldJump = false
+
+-- Função para converter números para extenso
+local function numberToWords(num)
+    if num < 0 or num > 999999999999999999999 then
+        return "NÚMERO INVÁLIDO"
+    end
+    
+    if num == 0 then return "ZERO" end
+    
+    local units = {
+        [0] = "", [1] = "UM", [2] = "DOIS", [3] = "TRÊS", [4] = "QUATRO", [5] = "CINCO",
+        [6] = "SEIS", [7] = "SETE", [8] = "OITO", [9] = "NOVE", [10] = "DEZ",
+        [11] = "ONZE", [12] = "DOZE", [13] = "TREZE", [14] = "QUATORZE", [15] = "QUINZE",
+        [16] = "DEZESSEIS", [17] = "DEZESSETE", [18] = "DEZOITO", [19] = "DEZENOVE", [20] = "VINTE"
+    }
+    
+    local tens = {
+        [2] = "VINTE", [3] = "TRINTA", [4] = "QUARENTA", [5] = "CINQUENTA",
+        [6] = "SESSENTA", [7] = "SETENTA", [8] = "OITENTA", [9] = "NOVENTA"
+    }
+    
+    -- Função para converter grupos de 3 dígitos
+    local function convertGroup(group, isLast)
+        if group == 0 then return "" end
+        
+        local result = ""
+        local hundreds = math.floor(group / 100)
+        local remainder = group % 100
+        
+        -- Centenas
+        if hundreds > 0 then
+            if hundreds == 1 then
+                result = "CENTO"
+            else
+                result = units[hundreds] .. "CENTOS"
+            end
+        end
+        
+        -- Dezenas e unidades
+        if remainder > 0 then
+            if remainder <= 20 then
+                result = result .. (result ~= "" and " E " or "") .. units[remainder]
+            else
+                local ten = math.floor(remainder / 10)
+                local unit = remainder % 10
+                
+                result = result .. (result ~= "" and " E " or "") .. tens[ten]
+                if unit > 0 then
+                    result = result .. " E " .. units[unit]
+                end
+            end
+        end
+        
+        return result
+    end
+    
+    -- Função para adicionar sufixos
+    local function addSuffix(group, position)
+        if group == 0 then return "" end
+        
+        local suffixes = {
+            [1] = "", [2] = " MIL", [3] = " MILHÕES", [4] = " BILHÕES",
+            [5] = " TRILHÕES", [6] = " QUATRILHÕES", [7] = " QUINTILHÕES"
+        }
+        
+        local suffix = suffixes[position] or ""
+        if group == 1 and position > 1 then
+            return "UM" .. suffix
+        else
+            return convertGroup(group, position == 1) .. suffix
+        end
+    end
+    
+    -- Dividir o número em grupos
+    local groups = {}
+    local temp = num
+    while temp > 0 do
+        table.insert(groups, 1, temp % 1000)
+        temp = math.floor(temp / 1000)
+    end
+    
+    -- Converter cada grupo
+    local result = ""
+    for i, group in ipairs(groups) do
+        local groupText = addSuffix(group, #groups - i + 1)
+        if groupText ~= "" then
+            result = result .. (result ~= "" and " " or "") .. groupText
+        end
+    end
+    
+    return result
+end
+
+-- Função para enviar mensagem no chat (MÉTODO MAIS EFICIENTE)
+local function sendChatMessage(message)
+    local TextChatService = game:GetService("TextChatService")
+
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        -- NOVO SISTEMA DE CHAT (Chat por canal)
+        local success, result = pcall(function()
+            TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral"):SendAsync(message)
+        end)
+        return success
+    else
+        -- SISTEMA ANTIGO DE CHAT
+        local success, result = pcall(function()
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local DefaultChatSystemChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
+            local SayMessageRequest = DefaultChatSystemChatEvents:WaitForChild("SayMessageRequest")
+
+            SayMessageRequest:FireServer(message, "All")
+        end)
+        return success
+    end
+end
+
+-- Função para fazer o personagem pular (MÉTODO MAIS EFICIENTE)
+local function makePlayerJump()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    Humanoid.Jump = true
+    return true
+end
 
 -- Função principal para executar a contagem
 local function executeCount()
@@ -35,11 +156,11 @@ local function executeCount()
     end
     
     local success, result = pcall(function()
-        local numberText = NumberConverter.numberToWords(currentNumber)
+        local numberText = numberToWords(currentNumber)
         local message = numberText .. finalPrompt
         
         -- Enviar mensagem
-        local sent = ChatSystem.SendChatMessage(message)
+        local sent = sendChatMessage(message)
         if not sent then
             Rayfield:Notify({
                 Title = "Erro",
@@ -51,7 +172,7 @@ local function executeCount()
         -- Pular DEPOIS de enviar a mensagem (se ativado)
         if shouldJump then
             task.wait(0.1) -- Pequena pausa para sincronizar
-            JumpSystem.makePlayerJump()
+            makePlayerJump()
         end
         
         currentNumber = currentNumber + 1
