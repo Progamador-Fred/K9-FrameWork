@@ -4,26 +4,15 @@
 
 local JumpSystem = {}
 
--- Função para fazer o personagem pular
+-- Função para fazer o personagem pular (MÉTODO MAIS EFICIENTE)
 function JumpSystem.makePlayerJump()
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
-    
-    if LocalPlayer then
-        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local Humanoid = Character:WaitForChild("Humanoid")
-        
-        if Humanoid then
-            -- Método simples e confiável
-            pcall(function()
-                Humanoid.Jump = true
-            end)
-            
-            return true
-        end
-    end
-    
-    return false
+    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    Humanoid.Jump = true
+    return true
 end
 
 return JumpSystem 
