@@ -132,22 +132,24 @@ end
 
 -- Função para fazer o personagem pular
 local function makePlayerJump()
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-    
-    if LocalPlayer then
-        local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local Humanoid = Character:WaitForChild("Humanoid")
+    local success, result = pcall(function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
         
-        if Humanoid then
-            pcall(function()
+        if LocalPlayer then
+            local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local Humanoid = Character:WaitForChild("Humanoid")
+            
+            if Humanoid then
                 Humanoid.Jump = true
-            end)
-            return true
+                return true
+            end
         end
-    end
+        
+        return false
+    end)
     
-    return false
+    return success
 end
 
 -- Função principal para executar a contagem
@@ -164,29 +166,41 @@ local function executeCount()
         return
     end
     
-    local numberText = numberToWords(currentNumber)
-    local message = numberText .. finalPrompt
+    local success, result = pcall(function()
+        local numberText = numberToWords(currentNumber)
+        local message = numberText .. finalPrompt
+        
+        -- Enviar mensagem
+        local sent = sendChatMessage(message)
+        if not sent then
+            Rayfield:Notify({
+                Title = "Erro",
+                Content = "Não foi possível enviar mensagem.",
+                Duration = 2
+            })
+        end
+        
+        -- Pular DEPOIS de enviar a mensagem (se ativado)
+        if shouldJump then
+            task.wait(0.1) -- Pequena pausa para sincronizar
+            makePlayerJump()
+        end
+        
+        currentNumber = currentNumber + 1
+        
+        task.wait(speed)
+        executeCount()
+    end)
     
-    -- Enviar mensagem
-    local sent = sendChatMessage(message)
-    if not sent then
+    if not success then
+        print("Erro na execução:", result)
+        isRunning = false
         Rayfield:Notify({
             Title = "Erro",
-            Content = "Não foi possível enviar mensagem.",
-            Duration = 2
+            Content = "Erro na execução: " .. tostring(result),
+            Duration = 3
         })
     end
-    
-    -- Pular DEPOIS de enviar a mensagem (se ativado)
-    if shouldJump then
-        task.wait(0.1) -- Pequena pausa para sincronizar
-        makePlayerJump()
-    end
-    
-    currentNumber = currentNumber + 1
-    
-    task.wait(speed)
-    executeCount()
 end
 
 -- Criando a interface principal
