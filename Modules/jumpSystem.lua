@@ -1,18 +1,30 @@
--- jumpSystem.lua
--- Sistema para fazer o personagem pular no Roblox
+-- chatSystem.lua
+-- Sistema universal de envio de mensagens no chat do Roblox
 -- Criado por: k9zzzzzz
 
-local JumpSystem = {}
+local ChatSystem = {}
 
--- Função para fazer o personagem pular (MÉTODO MAIS EFICIENTE)
-function JumpSystem.makePlayerJump()
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local Humanoid = Character:WaitForChild("Humanoid")
+-- Função universal para enviar mensagem no chat
+function ChatSystem.SendChatMessage(message)
+    local TextChatService = game:GetService("TextChatService")
 
-    Humanoid.Jump = true
-    return true
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        -- NOVO SISTEMA DE CHAT (Chat por canal)
+        local success, result = pcall(function()
+            TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral"):SendAsync(message)
+        end)
+        return success
+    else
+        -- SISTEMA ANTIGO DE CHAT
+        local success, result = pcall(function()
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local DefaultChatSystemChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
+            local SayMessageRequest = DefaultChatSystemChatEvents:WaitForChild("SayMessageRequest")
+            
+            SayMessageRequest:FireServer(message, "All")
+        end)
+        return success
+    end
 end
 
-return JumpSystem 
+return ChatSystem

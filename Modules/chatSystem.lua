@@ -4,7 +4,7 @@
 
 local ChatSystem = {}
 
--- Função universal para enviar mensagem no chat (MÉTODO MAIS EFICIENTE)
+-- Função universal para enviar mensagem no chat
 function ChatSystem.SendChatMessage(message)
     local TextChatService = game:GetService("TextChatService")
 
@@ -20,11 +20,11 @@ function ChatSystem.SendChatMessage(message)
             local ReplicatedStorage = game:GetService("ReplicatedStorage")
             local DefaultChatSystemChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
             local SayMessageRequest = DefaultChatSystemChatEvents:WaitForChild("SayMessageRequest")
-
+            
             SayMessageRequest:FireServer(message, "All")
         end)
         return success
     end
 end
 
-return ChatSystem 
+return ChatSystem

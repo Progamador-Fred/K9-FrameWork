@@ -96,4 +96,4 @@ function NumberConverter.numberToWords(num)
     return result
 end
 
-return NumberConverter 
+return NumberConverter
