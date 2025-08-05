@@ -109,25 +109,62 @@ end
 
 -- Função para enviar mensagem no chat (MÉTODO MAIS EFICIENTE)
 local function sendChatMessage(message)
-    local TextChatService = game:GetService("TextChatService")
-
-    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-        -- NOVO SISTEMA DE CHAT (Chat por canal)
-        local success, result = pcall(function()
-            TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral"):SendAsync(message)
-        end)
-        return success
-    else
-        -- SISTEMA ANTIGO DE CHAT
-        local success, result = pcall(function()
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local DefaultChatSystemChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
-            local SayMessageRequest = DefaultChatSystemChatEvents:WaitForChild("SayMessageRequest")
-
-            SayMessageRequest:FireServer(message, "All")
-        end)
-        return success
+    local success = false
+    
+    -- Método 1: DefaultChatSystemChatEvents (Chat antigo)
+    local chatEvent = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+    if chatEvent then
+        local sayMessageRequest = chatEvent:FindFirstChild("SayMessageRequest")
+        if sayMessageRequest then
+            local success1, result1 = pcall(function()
+                sayMessageRequest:FireServer(message, "All")
+            end)
+            if success1 then
+                success = true
+            end
+        end
     end
+    
+    -- Método 2: TextChatService (Chat novo)
+    if not success then
+        local TextChatService = game:GetService("TextChatService")
+        if TextChatService then
+            local success2, result2 = pcall(function()
+                TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral"):SendAsync(message)
+            end)
+            if success2 then
+                success = true
+            end
+        end
+    end
+    
+    -- Método 3: ChatService (Fallback)
+    if not success then
+        local ChatService = game:GetService("ChatService")
+        if ChatService then
+            local success3, result3 = pcall(function()
+                ChatService:Chat(message)
+            end)
+            if success3 then
+                success = true
+            end
+        end
+    end
+    
+    -- Método 4: Players.LocalPlayer.Chatted (Último recurso)
+    if not success then
+        local player = game.Players.LocalPlayer
+        if player then
+            local success4, result4 = pcall(function()
+                player:Chat(message)
+            end)
+            if success4 then
+                success = true
+            end
+        end
+    end
+    
+    return success
 end
 
 -- Função para fazer o personagem pular (MÉTODO MAIS EFICIENTE)
@@ -155,41 +192,29 @@ local function executeCount()
         return
     end
     
-    local success, result = pcall(function()
-        local numberText = numberToWords(currentNumber)
-        local message = numberText .. finalPrompt
-        
-        -- Enviar mensagem
-        local sent = sendChatMessage(message)
-        if not sent then
-            Rayfield:Notify({
-                Title = "Erro",
-                Content = "Não foi possível enviar mensagem.",
-                Duration = 2
-            })
-        end
-        
-        -- Pular DEPOIS de enviar a mensagem (se ativado)
-        if shouldJump then
-            task.wait(0.1) -- Pequena pausa para sincronizar
-            makePlayerJump()
-        end
-        
-        currentNumber = currentNumber + 1
-        
-        task.wait(speed)
-        executeCount()
-    end)
+    local numberText = numberToWords(currentNumber)
+    local message = numberText .. finalPrompt
     
-    if not success then
-        print("Erro na execução:", result)
-        isRunning = false
+    -- Enviar mensagem
+    local sent = sendChatMessage(message)
+    if not sent then
         Rayfield:Notify({
             Title = "Erro",
-            Content = "Erro na execução: " .. tostring(result),
-            Duration = 3
+            Content = "Não foi possível enviar mensagem.",
+            Duration = 2
         })
     end
+    
+    -- Pular DEPOIS de enviar a mensagem (se ativado)
+    if shouldJump then
+        task.wait(0.1) -- Pequena pausa para sincronizar
+        makePlayerJump()
+    end
+    
+    currentNumber = currentNumber + 1
+    
+    task.wait(speed)
+    executeCount()
 end
 
 -- Criando a interface principal
